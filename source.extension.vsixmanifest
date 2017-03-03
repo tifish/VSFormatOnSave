@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+    <Metadata>
+        <Identity Id="87ed88e4-892f-46f4-92c1-7406e223b41d" Version="1.0" Language="en-US" Publisher="Winston Feng" />
+        <DisplayName>Format on Save</DisplayName>
+        <Description xml:space="preserve">Automatically format document on save. Current release includes RemoveAndSort, FormatDoucment, UnifyLineBreak with file extension filters.</Description>
+        <MoreInfo>https://visualstudiogallery.msdn.microsoft.com/87ed88e4-892f-46f4-92c1-7406e223b41d</MoreInfo>
+        <Tags>Format, LineBreak, LineEnd</Tags>
+    </Metadata>
+    <Installation InstalledByMsi="false">
+        <InstallationTarget Version="[11.0,]" Id="Microsoft.VisualStudio.Community" />
+        <InstallationTarget Version="[11.0,]" Id="Microsoft.VisualStudio.Pro" />
+
+    </Installation>
+    <Dependencies>
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="4.5" />
+        <Dependency Id="Microsoft.VisualStudio.MPF.11.0" DisplayName="Visual Studio MPF 11.0" d:Source="Installed" Version="11.0" />
+    </Dependencies>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[11.0,]" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    </Assets>
+</PackageManifest>
