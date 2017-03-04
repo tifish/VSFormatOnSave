@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudio.Text;
 
 namespace Tinyfish.FormatOnSave
 {
@@ -24,22 +25,6 @@ namespace Tinyfish.FormatOnSave
             _textManager = textManager;
             _dte = dte;
             _settingsPage = settingsPage;
-        }
-
-        IWpfTextView GetWpfTextView(IVsTextView vTextView)
-        {
-            IWpfTextView view = null;
-            var userData = (IVsUserData)vTextView;
-
-            if (null != userData)
-            {
-                var guidViewHost = DefGuidList.guidIWpfTextViewHost;
-                userData.GetData(ref guidViewHost, out var holder);
-                var viewHost = (IWpfTextViewHost)holder;
-                view = viewHost.TextView;
-            }
-
-            return view;
         }
 
         public int OnBeforeSave(uint docCookie)
@@ -60,10 +45,14 @@ namespace Tinyfish.FormatOnSave
             {
                 FormatDocument();
             }
-            if (_settingsPage.EnableUnifyLineBreak
-                && _settingsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document))
+            var isFilterAllowed = _settingsPage.AllowDenyFilter.IsAllowed(document);
+            if (_settingsPage.EnableUnifyLineBreak && isFilterAllowed)
             {
-                UnifyLineBreak();
+                UnifyLineBreak(document);
+            }
+            if (_settingsPage.EnableUnifyEndOfFile && isFilterAllowed)
+            {
+                UnifyEndOfFile(document);
             }
 
             return VSConstants.S_OK;
@@ -98,10 +87,9 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void UnifyLineBreak()
+        void UnifyLineBreak(Document document)
         {
-            _textManager.GetActiveView(1, null, out var vsTextView);
-            var wpfTextView = GetWpfTextView(vsTextView);
+            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
 
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
@@ -115,6 +103,8 @@ namespace Tinyfish.FormatOnSave
                     case SettingsPage.LineBreakStyle.Windows:
                         defaultLineBreak = "\r\n";
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 foreach (var line in snapshot.Lines)
@@ -132,12 +122,86 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        private Document FindDocument(uint docCookie)
+        static void UnifyEndOfFile(Document document)
+        {
+            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
+
+            var snapshot = wpfTextView.TextSnapshot;
+            using (var edit = snapshot.TextBuffer.CreateEdit())
+            {
+                var lineNumber = snapshot.LineCount - 1;
+                while (lineNumber >= 0 && snapshot.GetLineFromLineNumber(lineNumber).GetText().Trim() == "")
+                {
+                    lineNumber--;
+                }
+
+                var hasModified = false;
+                var startEmptyLineNumber = lineNumber + 1;
+
+                // Supply one empty line
+                if (startEmptyLineNumber > snapshot.LineCount - 1)
+                {
+                    var firstLine = snapshot.GetLineFromLineNumber(1);
+                    var defaultLineBreakText = firstLine.GetLineBreakText();
+                    if (!string.IsNullOrEmpty(defaultLineBreakText))
+                    {
+                        var lastLine = snapshot.GetLineFromLineNumber(startEmptyLineNumber - 1);
+                        edit.Insert(lastLine.End, defaultLineBreakText);
+                        hasModified = true;
+                    }
+                }
+                // Nothing to format
+                else if (startEmptyLineNumber == snapshot.LineCount - 1)
+                {
+                    // do nothing
+                }
+                // Delete redudent empty lines
+                else if (startEmptyLineNumber <= snapshot.LineCount - 1)
+                {
+                    var startPosition = snapshot.GetLineFromLineNumber(startEmptyLineNumber).Start.Position;
+                    var endPosition = snapshot.GetLineFromLineNumber(snapshot.LineCount - 1).EndIncludingLineBreak.Position;
+                    edit.Delete(new Span(startPosition, endPosition - startPosition));
+                    hasModified = true;
+                }
+
+                if (hasModified)
+                {
+                    edit.Apply();
+                }
+            }
+        }
+
+        Document FindDocument(uint docCookie)
         {
             var documentInfo = _runningDocumentTable.GetDocumentInfo(docCookie);
             var documentPath = documentInfo.Moniker;
 
             return _dte.Documents.Cast<Document>().FirstOrDefault(doc => doc.FullName == documentPath);
+        }
+
+        static IWpfTextView GetWpfTextView(IVsTextView vTextView)
+        {
+            IWpfTextView view = null;
+            var userData = vTextView as IVsUserData;
+
+            if (null != userData)
+            {
+                var guidViewHost = DefGuidList.guidIWpfTextViewHost;
+                userData.GetData(ref guidViewHost, out var holder);
+                var viewHost = (IWpfTextViewHost)holder;
+                view = viewHost.TextView;
+            }
+
+            return view;
+        }
+
+        static IVsTextView GetIVsTextView(string filePath)
+        {
+            var dte2 = (EnvDTE80.DTE2)Package.GetGlobalService(typeof(SDTE));
+            var sp = (Microsoft.VisualStudio.OLE.Interop.IServiceProvider)dte2;
+            var serviceProvider = new ServiceProvider(sp);
+            return VsShellUtilities.IsDocumentOpen(serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
+                ? VsShellUtilities.GetTextView(windowFrame) : null;
         }
 
         public int OnAfterFirstDocumentLock(uint docCookie, uint dwRdtLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
@@ -184,11 +248,3 @@ namespace Tinyfish.FormatOnSave
         }
     }
 }
-
-
-
-
-
-
-
-

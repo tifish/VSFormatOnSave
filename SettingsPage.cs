@@ -23,11 +23,11 @@ namespace Tinyfish.FormatOnSave
         public bool EnableFormatDocument { get; set; } = true;
 
         [Category("On Save")]
-        [Description("Allow extentions for FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
+        [Description("Allow extentions for FormatDocument only. Space separated list. For example: .cs .html .cshtml .vb")]
         public string AllowFormatDocumentExtentions { get; set; } = string.Empty;
 
         [Category("On Save")]
-        [Description("Deny extentions for FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
+        [Description("Deny extentions for FormatDocument only. Space separated list. For example: .cs .html .cshtml .vb")]
         public string DenyFormatDocumentExtentions { get; set; } = string.Empty;
 
         [Category("On Save")]
@@ -35,28 +35,32 @@ namespace Tinyfish.FormatOnSave
         public bool EnableUnifyLineBreak { get; set; } = true;
 
         [Category("On Save")]
-        [Description("Allow extentions for UnifyLineBreak. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowUnifyLineBreakExtentions { get; set; } = string.Empty;
+        [Description("Allow extentions for all except FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
+        public string AllowExtentions { get; set; } = string.Empty;
 
         [Category("On Save")]
         [Description(
-            "Deny extentions for UnifyLineBreak. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyUnifyLineBreakExtentions { get; set; } = string.Empty;
+            "Deny extentions for all except FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
+        public string DenyExtentions { get; set; } = string.Empty;
 
         [Category("On Save")]
         [Description("Line break style.")]
         public LineBreakStyle LineBreak { get; set; } = LineBreakStyle.Unix;
 
+        [Category("On Save")]
+        [Description("Enable unify end of file to one empty line on save.")]
+        public bool EnableUnifyEndOfFile { get; set; } = true;
+
         public AllowDenyDocumentFilter AllowDenyFormatDocumentFilter;
-        public AllowDenyDocumentFilter AllowDenyUnifyLineBreakFilter;
+        public AllowDenyDocumentFilter AllowDenyFilter;
 
         void UpdateSettings()
         {
             AllowDenyFormatDocumentFilter = new AllowDenyDocumentFilter(
                 AllowFormatDocumentExtentions.Split(' '), DenyFormatDocumentExtentions.Split(' '));
 
-            AllowDenyUnifyLineBreakFilter = new AllowDenyDocumentFilter(
-                AllowUnifyLineBreakExtentions.Split(' '), DenyUnifyLineBreakExtentions.Split(' '));
+            AllowDenyFilter = new AllowDenyDocumentFilter(
+                AllowExtentions.Split(' '), DenyExtentions.Split(' '));
         }
 
         protected override void OnApply(PageApplyEventArgs e)
@@ -72,5 +76,3 @@ namespace Tinyfish.FormatOnSave
         }
     }
 }
-
-

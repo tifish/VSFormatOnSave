@@ -10,4 +10,3 @@ namespace Tinyfish.FormatOnSave
         public static readonly Guid GuidFormatOnSaveCmdSet = new Guid(GuidCommandSetString);
     };
 }
-
