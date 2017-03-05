@@ -60,7 +60,7 @@
   <ItemGroup>
     <Compile Include="AllowDenyDocumentFilter.cs" />
     <Compile Include="FormatOnSaveService.cs" />
-    <Compile Include="SettingsPage.cs">
+    <Compile Include="OptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Guids.cs" />

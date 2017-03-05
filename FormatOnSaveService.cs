@@ -19,15 +19,15 @@ namespace Tinyfish.FormatOnSave
     {
         readonly DTE _dte;
         readonly IVsTextManager _textManager;
-        readonly SettingsPage _settingsPage;
+        readonly OptionsPage _optionsPage;
         readonly RunningDocumentTable _runningDocumentTable;
 
-        public FormatOnSaveService(DTE dte, RunningDocumentTable runningDocumentTable, IVsTextManager textManager, SettingsPage settingsPage)
+        public FormatOnSaveService(DTE dte, RunningDocumentTable runningDocumentTable, IVsTextManager textManager, OptionsPage optionsPage)
         {
             _runningDocumentTable = runningDocumentTable;
             _textManager = textManager;
             _dte = dte;
-            _settingsPage = settingsPage;
+            _optionsPage = optionsPage;
         }
 
         public int OnBeforeSave(uint docCookie)
@@ -39,26 +39,26 @@ namespace Tinyfish.FormatOnSave
                 return VSConstants.S_OK;
             }
 
-            var isFilterAllowed = _settingsPage.AllowDenyFilter.IsAllowed(document);
+            var isFilterAllowed = _optionsPage.AllowDenyFilter.IsAllowed(document);
 
-            if (_settingsPage.EnableTabToSpace && isFilterAllowed)
+            if (_optionsPage.EnableTabToSpace && isFilterAllowed)
             {
                 TabToSpace(document);
             }
-            if (_settingsPage.EnableRemoveAndSort && IsCsFile(document))
+            if (_optionsPage.EnableRemoveAndSort && IsCsFile(document))
             {
                 RemoveAndSort();
             }
-            if (_settingsPage.EnableFormatDocument
-                && _settingsPage.AllowDenyFormatDocumentFilter.IsAllowed(document))
+            if (_optionsPage.EnableFormatDocument
+                && _optionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document))
             {
                 FormatDocument();
             }
-            if (_settingsPage.EnableUnifyLineBreak && isFilterAllowed)
+            if (_optionsPage.EnableUnifyLineBreak && isFilterAllowed)
             {
                 UnifyLineBreak(document);
             }
-            if (_settingsPage.EnableUnifyEndOfFile && isFilterAllowed)
+            if (_optionsPage.EnableUnifyEndOfFile && isFilterAllowed)
             {
                 UnifyEndOfFile(document);
             }
@@ -103,12 +103,12 @@ namespace Tinyfish.FormatOnSave
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
                 var defaultLineBreak = "";
-                switch (_settingsPage.LineBreak)
+                switch (_optionsPage.LineBreak)
                 {
-                    case SettingsPage.LineBreakStyle.Unix:
+                    case OptionsPage.LineBreakStyle.Unix:
                         defaultLineBreak = "\n";
                         break;
-                    case SettingsPage.LineBreakStyle.Windows:
+                    case OptionsPage.LineBreakStyle.Windows:
                         defaultLineBreak = "\r\n";
                         break;
                     default:
@@ -237,8 +237,8 @@ namespace Tinyfish.FormatOnSave
                         {
                             var absTabPosition = line.Start.Position + i;
                             edit.Delete(absTabPosition, 1);
-                            var spaceCount = _settingsPage.TabToSpaceSize -
-                                             (i + positionOffset) % _settingsPage.TabToSpaceSize;
+                            var spaceCount = _optionsPage.TabToSpaceSize -
+                                             (i + positionOffset) % _optionsPage.TabToSpaceSize;
                             edit.Insert(absTabPosition, _spaceStringPool.GetString(spaceCount));
                             positionOffset += spaceCount - 1;
                             hasModifed = true;
