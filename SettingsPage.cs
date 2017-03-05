@@ -51,6 +51,14 @@ namespace Tinyfish.FormatOnSave
         [Description("Enable unify end of file to one empty line on save.")]
         public bool EnableUnifyEndOfFile { get; set; } = true;
 
+        [Category("On Save")]
+        [Description("Enable tab to space on save.")]
+        public bool EnableTabToSpace { get; set; } = true;
+
+        [Category("On Save")]
+        [Description("Tab to ? spaces.")]
+        public int TabToSpaceSize { get; set; } = 4;
+
         public AllowDenyDocumentFilter AllowDenyFormatDocumentFilter;
         public AllowDenyDocumentFilter AllowDenyFilter;
 

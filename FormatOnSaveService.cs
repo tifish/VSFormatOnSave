@@ -6,8 +6,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Text;
 
 namespace Tinyfish.FormatOnSave
@@ -36,6 +39,12 @@ namespace Tinyfish.FormatOnSave
                 return VSConstants.S_OK;
             }
 
+            var isFilterAllowed = _settingsPage.AllowDenyFilter.IsAllowed(document);
+
+            if (_settingsPage.EnableTabToSpace && isFilterAllowed)
+            {
+                TabToSpace(document);
+            }
             if (_settingsPage.EnableRemoveAndSort && IsCsFile(document))
             {
                 RemoveAndSort();
@@ -45,7 +54,6 @@ namespace Tinyfish.FormatOnSave
             {
                 FormatDocument();
             }
-            var isFilterAllowed = _settingsPage.AllowDenyFilter.IsAllowed(document);
             if (_settingsPage.EnableUnifyLineBreak && isFilterAllowed)
             {
                 UnifyLineBreak(document);
@@ -160,7 +168,7 @@ namespace Tinyfish.FormatOnSave
                 {
                     var startPosition = snapshot.GetLineFromLineNumber(startEmptyLineNumber).Start.Position;
                     var endPosition = snapshot.GetLineFromLineNumber(snapshot.LineCount - 1).EndIncludingLineBreak.Position;
-                    edit.Delete(new Span(startPosition, endPosition - startPosition));
+                    edit.Delete(startPosition, endPosition - startPosition);
                     hasModified = true;
                 }
 
@@ -169,6 +177,101 @@ namespace Tinyfish.FormatOnSave
                     edit.Apply();
                 }
             }
+        }
+
+        class SpaceStringPool
+        {
+            readonly string[] _stringCache = new string[8];
+
+            public string GetString(int spaceCount)
+            {
+                if (spaceCount <= 0)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+
+                var index = spaceCount - 1;
+
+                if (spaceCount > _stringCache.Length)
+                {
+                    return new string(' ', spaceCount);
+                }
+                else if (_stringCache[index] == null)
+                {
+                    _stringCache[index] = new string(' ', spaceCount);
+                    return _stringCache[index];
+                }
+                else
+                {
+                    return _stringCache[index];
+                }
+            }
+        }
+
+        readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
+
+        void TabToSpace(Document document)
+        {
+            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
+
+            var snapshot = wpfTextView.TextSnapshot;
+            using (var edit = snapshot.TextBuffer.CreateEdit())
+            {
+                var hasModifed = false;
+
+                foreach (var line in snapshot.Lines)
+                {
+                    var lineText = line.GetText();
+
+                    if (!lineText.Contains('\t'))
+                    {
+                        continue;
+                    }
+
+                    var positionOffset = 0;
+
+                    for (int i = 0; i < lineText.Length; i++)
+                    {
+                        var currentChar = lineText[i];
+                        if (currentChar == '\t')
+                        {
+                            var absTabPosition = line.Start.Position + i;
+                            edit.Delete(absTabPosition, 1);
+                            var spaceCount = _settingsPage.TabToSpaceSize -
+                                             (i + positionOffset) % _settingsPage.TabToSpaceSize;
+                            edit.Insert(absTabPosition, _spaceStringPool.GetString(spaceCount));
+                            positionOffset += spaceCount - 1;
+                            hasModifed = true;
+                        }
+                        else if (IsCjkCharacter(currentChar))
+                        {
+                            positionOffset++;
+                        }
+                    }
+                }
+
+                if (hasModifed)
+                {
+                    edit.Apply();
+                }
+            }
+        }
+
+        readonly Regex _cjkRegex = new Regex(
+            @"\p{IsHangulJamo}|" +
+            @"\p{IsCJKRadicalsSupplement}|" +
+            @"\p{IsCJKSymbolsandPunctuation}|" +
+            @"\p{IsEnclosedCJKLettersandMonths}|" +
+            @"\p{IsCJKCompatibility}|" +
+            @"\p{IsCJKUnifiedIdeographsExtensionA}|" +
+            @"\p{IsCJKUnifiedIdeographs}|" +
+            @"\p{IsHangulSyllables}|" +
+            @"\p{IsCJKCompatibilityForms}|" +
+            @"\p{IsHalfwidthandFullwidthForms}");
+
+        bool IsCjkCharacter(char character)
+        {
+            return _cjkRegex.IsMatch(character.ToString());
         }
 
         Document FindDocument(uint docCookie)
