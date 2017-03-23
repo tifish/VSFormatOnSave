@@ -14,12 +14,12 @@ namespace Tinyfish.FormatOnSave
 {
     class FormatOnSaveService : IVsRunningDocTableEvents3
     {
-        readonly DTE _dte;
+        readonly EnvDTE80.DTE2 _dte;
         readonly IVsTextManager _textManager;
         readonly OptionsPage _optionsPage;
         readonly RunningDocumentTable _runningDocumentTable;
 
-        public FormatOnSaveService(DTE dte, RunningDocumentTable runningDocumentTable, IVsTextManager textManager, OptionsPage optionsPage)
+        public FormatOnSaveService(EnvDTE80.DTE2 dte, RunningDocumentTable runningDocumentTable, IVsTextManager textManager, OptionsPage optionsPage)
         {
             _runningDocumentTable = runningDocumentTable;
             _textManager = textManager;
@@ -133,7 +133,7 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        static void UnifyEndOfFile(Document document)
+        void UnifyEndOfFile(Document document)
         {
             var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
 
@@ -288,9 +288,9 @@ namespace Tinyfish.FormatOnSave
         static IWpfTextView GetWpfTextView(IVsTextView vTextView)
         {
             IWpfTextView view = null;
-            var userData = vTextView as IVsUserData;
+            var userData = (IVsUserData)vTextView;
 
-            if (null != userData)
+            if (userData != null)
             {
                 var guidViewHost = DefGuidList.guidIWpfTextViewHost;
                 userData.GetData(ref guidViewHost, out var holder);
@@ -301,12 +301,16 @@ namespace Tinyfish.FormatOnSave
             return view;
         }
 
-        static IVsTextView GetIVsTextView(string filePath)
+        ServiceProvider _serviceProvider;
+
+        IVsTextView GetIVsTextView(string filePath)
         {
-            var dte2 = (EnvDTE80.DTE2)Package.GetGlobalService(typeof(SDTE));
-            var sp = (Microsoft.VisualStudio.OLE.Interop.IServiceProvider)dte2;
-            var serviceProvider = new ServiceProvider(sp);
-            return VsShellUtilities.IsDocumentOpen(serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
+            if (_serviceProvider == null)
+            {
+                var sp = (Microsoft.VisualStudio.OLE.Interop.IServiceProvider)_dte;
+                _serviceProvider = new ServiceProvider(sp);
+            }
+            return VsShellUtilities.IsDocumentOpen(_serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
                 ? VsShellUtilities.GetTextView(windowFrame) : null;
         }
 
