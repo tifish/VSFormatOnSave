@@ -53,7 +53,7 @@ namespace Tinyfish.FormatOnSave
                 FormatDocument();
             }
             // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-            if (_optionsPage.EnableTabToSpace && isFilterAllowed)
+            if (_optionsPage.EnableTabToSpace && isFilterAllowed && _dte.Version == "15.0")
             {
                 TabToSpace(document);
             }
@@ -308,6 +308,22 @@ namespace Tinyfish.FormatOnSave
             var serviceProvider = new ServiceProvider(sp);
             return VsShellUtilities.IsDocumentOpen(serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
                 ? VsShellUtilities.GetTextView(windowFrame) : null;
+        }
+
+        IVsOutputWindowPane _outputWindowPane;
+        Guid _outputWindowPaneGuid = new Guid("8AEEC946-659A-4D14-8340-730B2A0FF39C");
+
+        void OutputString(string message)
+        {
+            if (_outputWindowPane == null)
+            {
+                var outWindow = (IVsOutputWindow)Package.GetGlobalService(typeof(SVsOutputWindow));
+                outWindow.CreatePane(ref _outputWindowPaneGuid, "VSFormatOnSave", 1, 1);
+                outWindow.GetPane(ref _outputWindowPaneGuid, out _outputWindowPane);
+            }
+
+            _outputWindowPane.OutputString(message + Environment.NewLine);
+            _outputWindowPane.Activate(); // Brings this pane into view
         }
 
         public int OnAfterFirstDocumentLock(uint docCookie, uint dwRdtLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
