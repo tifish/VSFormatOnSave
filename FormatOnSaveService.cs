@@ -6,12 +6,9 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.VisualStudio.Text;
 
 namespace Tinyfish.FormatOnSave
 {
@@ -41,6 +38,7 @@ namespace Tinyfish.FormatOnSave
 
             var isFilterAllowed = _optionsPage.AllowDenyFilter.IsAllowed(document);
 
+            // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
             if (_optionsPage.EnableTabToSpace && isFilterAllowed)
             {
                 TabToSpace(document);
@@ -53,6 +51,11 @@ namespace Tinyfish.FormatOnSave
                 && _optionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document))
             {
                 FormatDocument();
+            }
+            // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
+            if (_optionsPage.EnableTabToSpace && isFilterAllowed)
+            {
+                TabToSpace(document);
             }
             if (_optionsPage.EnableUnifyLineBreak && isFilterAllowed)
             {
