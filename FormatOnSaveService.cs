@@ -19,12 +19,13 @@ namespace Tinyfish.FormatOnSave
         readonly OptionsPage _optionsPage;
         readonly RunningDocumentTable _runningDocumentTable;
 
-        public FormatOnSaveService(EnvDTE80.DTE2 dte, RunningDocumentTable runningDocumentTable, IVsTextManager textManager, OptionsPage optionsPage)
+        public FormatOnSaveService(RunningDocumentTable runningDocumentTable, OptionsPage optionsPage)
         {
             _runningDocumentTable = runningDocumentTable;
-            _textManager = textManager;
-            _dte = dte;
             _optionsPage = optionsPage;
+
+            _dte = (EnvDTE80.DTE2)Package.GetGlobalService(typeof(SDTE));
+            _textManager = (IVsTextManager)Package.GetGlobalService(typeof(SVsTextManager));
         }
 
         public int OnBeforeSave(uint docCookie)

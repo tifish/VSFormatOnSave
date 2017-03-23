@@ -1,6 +1,4 @@
 ﻿using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
 using System.Runtime.InteropServices;
 
 namespace Tinyfish.FormatOnSave
@@ -14,11 +12,9 @@ namespace Tinyfish.FormatOnSave
     {
         protected override void Initialize()
         {
-            var dte2 = (EnvDTE80.DTE2)Package.GetGlobalService(typeof(SDTE));
-            var textManager = (IVsTextManager)GetService(typeof(SVsTextManager));
             var runningDocumentTable = new RunningDocumentTable(this);
             var options = (OptionsPage)GetDialogPage(typeof(OptionsPage));
-            var plugin = new FormatOnSaveService(dte2, runningDocumentTable, textManager, options);
+            var plugin = new FormatOnSaveService(runningDocumentTable, options);
             runningDocumentTable.Advise(plugin);
 
             base.Initialize();
