@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Tinyfish.FormatOnSave</RootNamespace>
-    <AssemblyName>FormatOnSave</AssemblyName>
+    <AssemblyName>VSFormatOnSave</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <StartAction>Program</StartAction>
     <StartProgram>$(DevEnvDir)\devenv.exe</StartProgram>
