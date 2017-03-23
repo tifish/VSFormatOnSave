@@ -14,7 +14,9 @@ namespace Tinyfish.FormatOnSave
         {
             var runningDocumentTable = new RunningDocumentTable(this);
             var options = (OptionsPage)GetDialogPage(typeof(OptionsPage));
+
             var plugin = new FormatOnSaveService(runningDocumentTable, options);
+
             runningDocumentTable.Advise(plugin);
 
             base.Initialize();

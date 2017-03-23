@@ -1,23 +1,29 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using DefGuidList = Microsoft.VisualStudio.Editor.DefGuidList;
 
 namespace Tinyfish.FormatOnSave
 {
+    [Export(typeof(IVsRunningDocTableEvents3))]
     class FormatOnSaveService : IVsRunningDocTableEvents3
     {
         readonly EnvDTE80.DTE2 _dte;
         readonly IVsTextManager _textManager;
         readonly OptionsPage _optionsPage;
         readonly RunningDocumentTable _runningDocumentTable;
+        readonly ServiceProvider _serviceProvider;
+        internal ITextUndoHistoryRegistry _undoHistoryRegistry;
 
         public FormatOnSaveService(RunningDocumentTable runningDocumentTable, OptionsPage optionsPage)
         {
@@ -26,6 +32,9 @@ namespace Tinyfish.FormatOnSave
 
             _dte = (EnvDTE80.DTE2)Package.GetGlobalService(typeof(SDTE));
             _textManager = (IVsTextManager)Package.GetGlobalService(typeof(SVsTextManager));
+            _serviceProvider = new ServiceProvider((Microsoft.VisualStudio.OLE.Interop.IServiceProvider)_dte);
+            var componentModel = (IComponentModel)Package.GetGlobalService(typeof(SComponentModel));
+            _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
         }
 
         public int OnBeforeSave(uint docCookie)
@@ -38,33 +47,40 @@ namespace Tinyfish.FormatOnSave
             }
 
             var isFilterAllowed = _optionsPage.AllowDenyFilter.IsAllowed(document);
+            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
+            _undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
 
-            // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-            if (_optionsPage.EnableTabToSpace && isFilterAllowed)
+            using (var undo = history?.CreateTransaction("Format on save"))
             {
-                TabToSpace(document);
-            }
-            if (_optionsPage.EnableRemoveAndSort && IsCsFile(document))
-            {
-                RemoveAndSort();
-            }
-            if (_optionsPage.EnableFormatDocument
-                && _optionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document))
-            {
-                FormatDocument();
-            }
-            // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-            if (_optionsPage.EnableTabToSpace && isFilterAllowed && _dte.Version == "15.0")
-            {
-                TabToSpace(document);
-            }
-            if (_optionsPage.EnableUnifyLineBreak && isFilterAllowed)
-            {
-                UnifyLineBreak(document);
-            }
-            if (_optionsPage.EnableUnifyEndOfFile && isFilterAllowed)
-            {
-                UnifyEndOfFile(document);
+                // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
+                if (_optionsPage.EnableTabToSpace && isFilterAllowed)
+                {
+                    TabToSpace(wpfTextView);
+                }
+                if (_optionsPage.EnableRemoveAndSort && IsCsFile(document))
+                {
+                    RemoveAndSort();
+                }
+                if (_optionsPage.EnableFormatDocument
+                    && _optionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document))
+                {
+                    FormatDocument();
+                }
+                // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
+                if (_optionsPage.EnableTabToSpace && isFilterAllowed && _dte.Version == "15.0")
+                {
+                    TabToSpace(wpfTextView);
+                }
+                if (_optionsPage.EnableUnifyLineBreak && isFilterAllowed)
+                {
+                    UnifyLineBreak(wpfTextView);
+                }
+                if (_optionsPage.EnableUnifyEndOfFile && isFilterAllowed)
+                {
+                    UnifyEndOfFile(wpfTextView);
+                }
+
+                undo?.Complete();
             }
 
             return VSConstants.S_OK;
@@ -99,10 +115,8 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void UnifyLineBreak(Document document)
+        void UnifyLineBreak(IWpfTextView wpfTextView)
         {
-            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
-
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
@@ -134,10 +148,8 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void UnifyEndOfFile(Document document)
+        void UnifyEndOfFile(IWpfTextView wpfTextView)
         {
-            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
-
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
@@ -214,10 +226,8 @@ namespace Tinyfish.FormatOnSave
 
         readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
 
-        void TabToSpace(Document document)
+        void TabToSpace(IWpfTextView wpfTextView)
         {
-            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
-
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
@@ -302,15 +312,8 @@ namespace Tinyfish.FormatOnSave
             return view;
         }
 
-        ServiceProvider _serviceProvider;
-
         IVsTextView GetIVsTextView(string filePath)
         {
-            if (_serviceProvider == null)
-            {
-                var sp = (Microsoft.VisualStudio.OLE.Interop.IServiceProvider)_dte;
-                _serviceProvider = new ServiceProvider(sp);
-            }
             return VsShellUtilities.IsDocumentOpen(_serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
                 ? VsShellUtilities.GetTextView(windowFrame) : null;
         }
