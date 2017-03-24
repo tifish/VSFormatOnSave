@@ -3,15 +3,17 @@
   <Metadata>
     <Identity Id="87ed88e4-892f-46f4-92c1-7406e223b41d" Version="1.4" Language="en-US" Publisher="Winston Feng" />
     <DisplayName>Format on Save</DisplayName>
-    <Description xml:space="preserve">Automatically format document on save. Current release includes RemoveAndSort, FormatDoucment, UnifyLineBreak, UnifyEndOfFile with file extension filters.</Description>
+    <Description xml:space="preserve">Automatically format document on save. Current release includes RemoveAndSort, FormatDoucment, UnifyLineBreak, UnifyEndOfFile, TabToSpace with file extension filters.</Description>
     <MoreInfo>https://visualstudiogallery.msdn.microsoft.com/87ed88e4-892f-46f4-92c1-7406e223b41d</MoreInfo>
     <License>LICENSE</License>
-    <Tags>Format, LineBreak, LineEnd</Tags>
+    <Tags>Format, LineBreak, LineEnd, Tab, Space</Tags>
   </Metadata>
   <Installation InstalledByMsi="false">
     <InstallationTarget Version="[11.0,]" Id="Microsoft.VisualStudio.Community" />
     <InstallationTarget Version="[11.0,]" Id="Microsoft.VisualStudio.Pro" />
-
+    <InstallationTarget Version="[11.0,]" Id="Microsoft.VisualStudio.Premium" />
+    <InstallationTarget Version="[11.0,]" Id="Microsoft.VisualStudio.Ultimate" />
+    <InstallationTarget Version="[11.0,]" Id="Microsoft.VisualStudio.Enterprise" />
   </Installation>
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="4.5" />
