@@ -52,12 +52,8 @@ namespace Tinyfish.FormatOnSave
         public bool EnableUnifyEndOfFile { get; set; } = true;
 
         [Category("On Save")]
-        [Description("Enable tab to space on save.")]
+        [Description("Enable tab to space on save. Depends on tabs options for the type of file.")]
         public bool EnableTabToSpace { get; set; } = true;
-
-        [Category("On Save")]
-        [Description("Tab to ? spaces.")]
-        public int TabToSpaceSize { get; set; } = 4;
 
         public AllowDenyDocumentFilter AllowDenyFormatDocumentFilter;
         public AllowDenyDocumentFilter AllowDenyFilter;

@@ -41,11 +41,13 @@ namespace Tinyfish.FormatOnSave
         {
             var document = FindDocument(docCookie);
 
-            if (document == null)
+            if (document == null || document.Type != "Text")
             {
                 return VSConstants.S_OK;
             }
 
+            var languageOptions = _dte.Properties["TextEditor", document.Language];
+            var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
             var isFilterAllowed = _optionsPage.AllowDenyFilter.IsAllowed(document);
             var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
             _undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
@@ -53,9 +55,9 @@ namespace Tinyfish.FormatOnSave
             using (var undo = history?.CreateTransaction("Format on save"))
             {
                 // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-                if (_optionsPage.EnableTabToSpace && isFilterAllowed)
+                if (_optionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs)
                 {
-                    TabToSpace(wpfTextView);
+                    TabToSpace(wpfTextView, document.TabSize);
                 }
                 if (_optionsPage.EnableRemoveAndSort && IsCsFile(document))
                 {
@@ -67,9 +69,9 @@ namespace Tinyfish.FormatOnSave
                     FormatDocument();
                 }
                 // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-                if (_optionsPage.EnableTabToSpace && isFilterAllowed && _dte.Version == "15.0")
+                if (_optionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs && _dte.Version == "15.0" && document.Language == "C/C++")
                 {
-                    TabToSpace(wpfTextView);
+                    TabToSpace(wpfTextView, document.TabSize);
                 }
                 if (_optionsPage.EnableUnifyLineBreak && isFilterAllowed)
                 {
@@ -226,7 +228,7 @@ namespace Tinyfish.FormatOnSave
 
         readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
 
-        void TabToSpace(IWpfTextView wpfTextView)
+        void TabToSpace(IWpfTextView wpfTextView, int tabSize)
         {
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
@@ -251,8 +253,7 @@ namespace Tinyfish.FormatOnSave
                         {
                             var absTabPosition = line.Start.Position + i;
                             edit.Delete(absTabPosition, 1);
-                            var spaceCount = _optionsPage.TabToSpaceSize -
-                                             (i + positionOffset) % _optionsPage.TabToSpaceSize;
+                            var spaceCount = tabSize - (i + positionOffset) % tabSize;
                             edit.Insert(absTabPosition, _spaceStringPool.GetString(spaceCount));
                             positionOffset += spaceCount - 1;
                             hasModifed = true;
