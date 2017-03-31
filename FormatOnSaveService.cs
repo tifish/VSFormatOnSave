@@ -23,7 +23,7 @@ namespace Tinyfish.FormatOnSave
         readonly OptionsPage _optionsPage;
         readonly RunningDocumentTable _runningDocumentTable;
         readonly ServiceProvider _serviceProvider;
-        internal ITextUndoHistoryRegistry _undoHistoryRegistry;
+        readonly ITextUndoHistoryRegistry _undoHistoryRegistry;
 
         public FormatOnSaveService(RunningDocumentTable runningDocumentTable, OptionsPage optionsPage)
         {
@@ -49,11 +49,15 @@ namespace Tinyfish.FormatOnSave
             var languageOptions = _dte.Properties["TextEditor", document.Language];
             var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
             var isFilterAllowed = _optionsPage.AllowDenyFilter.IsAllowed(document);
-            var wpfTextView = GetWpfTextView(GetIVsTextView(document.FullName));
+            var vsTextView = GetIVsTextView(document.FullName);
+            var wpfTextView = GetWpfTextView(vsTextView);
             _undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
 
             using (var undo = history?.CreateTransaction("Format on save"))
             {
+                vsTextView.GetCaretPos(out int oldCaretLine, out int oldCaretColumn);
+                vsTextView.SetCaretPos(oldCaretLine, 0);
+
                 // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
                 if (_optionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs)
                 {
@@ -81,6 +85,9 @@ namespace Tinyfish.FormatOnSave
                 {
                     UnifyEndOfFile(wpfTextView);
                 }
+
+                vsTextView.GetCaretPos(out int newCaretLine, out int newCaretColumn);
+                vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
 
                 undo?.Complete();
             }
@@ -110,6 +117,7 @@ namespace Tinyfish.FormatOnSave
             try
             {
                 _dte.ExecuteCommand("Edit.FormatDocument", "");
+
             }
             catch (COMException)
             {
