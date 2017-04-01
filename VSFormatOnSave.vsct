@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <Extern href="stdidcmd.h"/>
+
+  <Extern href="vsshlids.h"/>
+
+  <Commands package="GuidFormatOnSavePkg">
+    <Groups>
+      <Group guid="GuidFormatOnSaveCmdSetFile" id="MenuGroupFile" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetFolder" id="MenuGroupFolder" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetProject" id="MenuGroupProject" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetSolution" id="MenuGroupSolution" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNNODE"/>
+      </Group>
+    </Groups>
+
+    <Buttons>
+      <Button guid="GuidFormatOnSaveCmdSetFile" id="CmdIdFormatOnSaveFile" priority="0x0500" type="Button">
+        <Parent guid="GuidFormatOnSaveCmdSetFile" id="MenuGroupFile" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Format(FormatOnSave) In This File</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="GuidFormatOnSaveCmdSetFolder" id="CmdIdFormatOnSaveFolder" priority="0x0500" type="Button">
+        <Parent guid="GuidFormatOnSaveCmdSetFolder" id="MenuGroupFolder" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Format(FormatOnSave) In This Folder</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="GuidFormatOnSaveCmdSetProject" id="CmdIdFormatOnSaveProject" priority="0x0500" type="Button">
+        <Parent guid="GuidFormatOnSaveCmdSetProject" id="MenuGroupProject" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Format(FormatOnSave) In This Project</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="GuidFormatOnSaveCmdSetSolution" id="CmdIdFormatOnSaveSolution" priority="0x0500" type="Button">
+        <Parent guid="GuidFormatOnSaveCmdSetSolution" id="MenuGroupSolution" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Format(FormatOnSave) In This Solution</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <Symbols>
+    <GuidSymbol name="GuidFormatOnSavePkg" value="{46644c38-fb23-4f71-bc73-d8673b754a1e}" />
+
+    <GuidSymbol name="GuidFormatOnSaveCmdSetFile" value="{e87176c7-5748-4cef-8933-ce9be1c96113}">
+      <IDSymbol name="MenuGroupFile" value="0x1020" />
+      <IDSymbol name="CmdIdFormatOnSaveFile" value="0x0100" />
+    </GuidSymbol>
+
+    <GuidSymbol name="GuidFormatOnSaveCmdSetFolder" value="{3ab3c5e3-d02f-43f0-a482-7def23f76e6e}">
+      <IDSymbol name="MenuGroupFolder" value="0x1020" />
+      <IDSymbol name="CmdIdFormatOnSaveFolder" value="0x0101" />
+    </GuidSymbol>
+
+    <GuidSymbol name="GuidFormatOnSaveCmdSetProject" value="{b6afe42c-8081-4381-a0f7-7668bdbb9562}">
+      <IDSymbol name="MenuGroupProject" value="0x1020" />
+      <IDSymbol name="CmdIdFormatOnSaveProject" value="0x0102" />
+    </GuidSymbol>
+
+    <GuidSymbol name="GuidFormatOnSaveCmdSetSolution" value="{d876ec3f-7364-4f0f-be30-6b48ec10d9ba}">
+      <IDSymbol name="MenuGroupSolution" value="0x1020" />
+      <IDSymbol name="CmdIdFormatOnSaveSolution" value="0x0103" />
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>

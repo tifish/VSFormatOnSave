@@ -1,7 +1,6 @@
 ﻿// Created by Elders in project VSE-FormatDocumentOnSave. 
 // See https://github.com/Elders/VSE-FormatDocumentOnSave.
 
-using EnvDTE;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +9,7 @@ namespace Tinyfish.FormatOnSave
 {
     public class AllowDenyDocumentFilter
     {
-        readonly Func<Document, bool> _isAllowed = doc => true;
+        readonly Func<string, bool> _isAllowed = fileName => true;
 
         /// <summary>
         /// Everything is allowed when this ctor is used.
@@ -22,19 +21,19 @@ namespace Tinyfish.FormatOnSave
             allowedExtensions = allowedExtensions.Where(x => x.Equals(".*") == false && string.IsNullOrEmpty(x) == false);
             deniedExtensions = deniedExtensions.Where(x => x.Equals(".*") == false && string.IsNullOrEmpty(x) == false);
 
-            if (allowedExtensions.Count() > 0)
+            if (allowedExtensions.Any())
             {
-                _isAllowed = doc => allowedExtensions.Any(ext => doc.FullName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+                _isAllowed = fileName => allowedExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
             }
-            else if (deniedExtensions.Count() > 0)
+            else if (deniedExtensions.Any())
             {
-                _isAllowed = doc => deniedExtensions.Any(ext => doc.FullName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) == false;
+                _isAllowed = fileName => deniedExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) == false;
             }
         }
 
-        public bool IsAllowed(Document document)
+        public bool IsAllowed(string fileName)
         {
-            return _isAllowed(document);
+            return _isAllowed(fileName);
         }
     }
 }

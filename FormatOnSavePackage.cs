@@ -1,5 +1,18 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using EnvDTE;
+using EnvDTE80;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.TextManager.Interop;
+using System;
+using System.ComponentModel.Design;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using DefGuidList = Microsoft.VisualStudio.Editor.DefGuidList;
+using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Tinyfish.FormatOnSave
 {
@@ -8,18 +21,356 @@ namespace Tinyfish.FormatOnSave
     [ProvideAutoLoad("{f1536ef8-92ec-443c-9ed7-fdadf150da82}")] //To set the UI context to autoload a VSPackage
     [Guid(GuidList.GuidFormatOnSavePkgString)]
     [ProvideOptionPage(typeof(OptionsPage), "Format on Save", "Settings", 0, 0, true)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]
     public class FormatOnSavePackage : Package
     {
+        public DTE2 Dte;
+        IVsTextManager _textManager;
+        public OptionsPage OptionsPage;
+        RunningDocumentTable _runningDocumentTable;
+        ServiceProvider _serviceProvider;
+        ITextUndoHistoryRegistry _undoHistoryRegistry;
+        public OleMenuCommandService MenuCommandService;
+
         protected override void Initialize()
         {
-            var runningDocumentTable = new RunningDocumentTable(this);
-            var options = (OptionsPage)GetDialogPage(typeof(OptionsPage));
-
-            var plugin = new FormatOnSaveService(runningDocumentTable, options);
-
-            runningDocumentTable.Advise(plugin);
-
             base.Initialize();
+
+            _runningDocumentTable = new RunningDocumentTable(this);
+            OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
+
+            Dte = (DTE2)GetGlobalService(typeof(SDTE));
+            _textManager = (IVsTextManager)GetGlobalService(typeof(SVsTextManager));
+            _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
+            var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
+            _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
+            MenuCommandService = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
+
+            var plugin = new VsRunningDocTableEventsHandler(this);
+            _runningDocumentTable.Advise(plugin);
         }
+
+        public void Format(uint docCookie)
+        {
+            var document = FindDocument(docCookie);
+            Format(document);
+        }
+
+        Document FindDocument(uint docCookie)
+        {
+            var documentInfo = _runningDocumentTable.GetDocumentInfo(docCookie);
+            var documentPath = documentInfo.Moniker;
+
+            return Dte.Documents.Cast<Document>().FirstOrDefault(doc => doc.FullName == documentPath);
+        }
+
+        public bool Format(Document document)
+        {
+            if (document == null || document.Type != "Text" || document.Language == null || document.Language == "Plain Text")
+            {
+                return false;
+            }
+
+            document.Activate();
+
+            var languageOptions = Dte.Properties["TextEditor", document.Language];
+            var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
+            var isFilterAllowed = OptionsPage.AllowDenyFilter.IsAllowed(document.Name);
+
+            var vsTextView = GetIVsTextView(document.FullName);
+            if (vsTextView == null)
+            {
+                return false;
+            }
+            var wpfTextView = GetWpfTextView(vsTextView);
+            if (wpfTextView == null)
+            {
+                return false;
+            }
+
+            _undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
+
+            using (var undo = history?.CreateTransaction("Format on save"))
+            {
+                vsTextView.GetCaretPos(out int oldCaretLine, out int oldCaretColumn);
+                vsTextView.SetCaretPos(oldCaretLine, 0);
+
+                // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
+                if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs)
+                {
+                    TabToSpace(wpfTextView, document.TabSize);
+                }
+                if (OptionsPage.EnableRemoveAndSort && IsCsFile(document))
+                {
+                    RemoveAndSort();
+                }
+                if (OptionsPage.EnableFormatDocument
+                    && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
+                {
+                    FormatDocument();
+                }
+                // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
+                if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs && Dte.Version == "15.0" &&
+                    document.Language == "C/C++")
+                {
+                    TabToSpace(wpfTextView, document.TabSize);
+                }
+                if (OptionsPage.EnableUnifyLineBreak && isFilterAllowed)
+                {
+                    UnifyLineBreak(wpfTextView);
+                }
+                if (OptionsPage.EnableUnifyEndOfFile && isFilterAllowed)
+                {
+                    UnifyEndOfFile(wpfTextView);
+                }
+
+                vsTextView.GetCaretPos(out int newCaretLine, out int newCaretColumn);
+                vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
+
+                undo?.Complete();
+            }
+
+            return true;
+        }
+
+        static bool IsCsFile(Document document)
+        {
+            return document.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+        }
+
+        void RemoveAndSort()
+        {
+            try
+            {
+                Dte.ExecuteCommand("Edit.RemoveAndSort", "");
+            }
+            catch (COMException)
+            {
+
+            }
+        }
+
+        void FormatDocument()
+        {
+            try
+            {
+                Dte.ExecuteCommand("Edit.FormatDocument", "");
+
+            }
+            catch (COMException)
+            {
+
+            }
+        }
+
+        void UnifyLineBreak(IWpfTextView wpfTextView)
+        {
+            var snapshot = wpfTextView.TextSnapshot;
+            using (var edit = snapshot.TextBuffer.CreateEdit())
+            {
+                var defaultLineBreak = "";
+                switch (OptionsPage.LineBreak)
+                {
+                    case OptionsPage.LineBreakStyle.Unix:
+                        defaultLineBreak = "\n";
+                        break;
+                    case OptionsPage.LineBreakStyle.Windows:
+                        defaultLineBreak = "\r\n";
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                foreach (var line in snapshot.Lines)
+                {
+                    if (line.GetLineBreakText() == defaultLineBreak)
+                    {
+                        continue;
+                    }
+
+                    edit.Delete(line.End.Position, line.LineBreakLength);
+                    edit.Insert(line.End.Position, defaultLineBreak);
+                }
+
+                edit.Apply();
+            }
+        }
+
+        void UnifyEndOfFile(IWpfTextView wpfTextView)
+        {
+            var snapshot = wpfTextView.TextSnapshot;
+            using (var edit = snapshot.TextBuffer.CreateEdit())
+            {
+                var lineNumber = snapshot.LineCount - 1;
+                while (lineNumber >= 0 && snapshot.GetLineFromLineNumber(lineNumber).GetText().Trim() == "")
+                {
+                    lineNumber--;
+                }
+
+                var hasModified = false;
+                var startEmptyLineNumber = lineNumber + 1;
+
+                // Supply one empty line
+                if (startEmptyLineNumber > snapshot.LineCount - 1)
+                {
+                    var firstLine = snapshot.GetLineFromLineNumber(1);
+                    var defaultLineBreakText = firstLine.GetLineBreakText();
+                    if (!string.IsNullOrEmpty(defaultLineBreakText))
+                    {
+                        var lastLine = snapshot.GetLineFromLineNumber(startEmptyLineNumber - 1);
+                        edit.Insert(lastLine.End, defaultLineBreakText);
+                        hasModified = true;
+                    }
+                }
+                // Nothing to format
+                else if (startEmptyLineNumber == snapshot.LineCount - 1)
+                {
+                    // do nothing
+                }
+                // Delete redudent empty lines
+                else if (startEmptyLineNumber <= snapshot.LineCount - 1)
+                {
+                    var startPosition = snapshot.GetLineFromLineNumber(startEmptyLineNumber).Start.Position;
+                    var endPosition = snapshot.GetLineFromLineNumber(snapshot.LineCount - 1).EndIncludingLineBreak.Position;
+                    edit.Delete(startPosition, endPosition - startPosition);
+                    hasModified = true;
+                }
+
+                if (hasModified)
+                {
+                    edit.Apply();
+                }
+            }
+        }
+
+        class SpaceStringPool
+        {
+            readonly string[] _stringCache = new string[8];
+
+            public string GetString(int spaceCount)
+            {
+                if (spaceCount <= 0)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+
+                var index = spaceCount - 1;
+
+                if (spaceCount > _stringCache.Length)
+                {
+                    return new string(' ', spaceCount);
+                }
+                if (_stringCache[index] == null)
+                {
+                    _stringCache[index] = new string(' ', spaceCount);
+                    return _stringCache[index];
+                }
+                return _stringCache[index];
+            }
+        }
+
+        readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
+
+        void TabToSpace(IWpfTextView wpfTextView, int tabSize)
+        {
+            var snapshot = wpfTextView.TextSnapshot;
+            using (var edit = snapshot.TextBuffer.CreateEdit())
+            {
+                var hasModifed = false;
+
+                foreach (var line in snapshot.Lines)
+                {
+                    var lineText = line.GetText();
+
+                    if (!lineText.Contains('\t'))
+                    {
+                        continue;
+                    }
+
+                    var positionOffset = 0;
+
+                    for (var i = 0; i < lineText.Length; i++)
+                    {
+                        var currentChar = lineText[i];
+                        if (currentChar == '\t')
+                        {
+                            var absTabPosition = line.Start.Position + i;
+                            edit.Delete(absTabPosition, 1);
+                            var spaceCount = tabSize - (i + positionOffset) % tabSize;
+                            edit.Insert(absTabPosition, _spaceStringPool.GetString(spaceCount));
+                            positionOffset += spaceCount - 1;
+                            hasModifed = true;
+                        }
+                        else if (IsCjkCharacter(currentChar))
+                        {
+                            positionOffset++;
+                        }
+                    }
+                }
+
+                if (hasModifed)
+                {
+                    edit.Apply();
+                }
+            }
+        }
+
+        readonly Regex _cjkRegex = new Regex(
+            @"\p{IsHangulJamo}|" +
+            @"\p{IsCJKRadicalsSupplement}|" +
+            @"\p{IsCJKSymbolsandPunctuation}|" +
+            @"\p{IsEnclosedCJKLettersandMonths}|" +
+            @"\p{IsCJKCompatibility}|" +
+            @"\p{IsCJKUnifiedIdeographsExtensionA}|" +
+            @"\p{IsCJKUnifiedIdeographs}|" +
+            @"\p{IsHangulSyllables}|" +
+            @"\p{IsCJKCompatibilityForms}|" +
+            @"\p{IsHalfwidthandFullwidthForms}");
+
+        bool IsCjkCharacter(char character)
+        {
+            return _cjkRegex.IsMatch(character.ToString());
+        }
+
+        static IWpfTextView GetWpfTextView(IVsTextView vTextView)
+        {
+            IWpfTextView view = null;
+            var userData = (IVsUserData)vTextView;
+
+            if (userData != null)
+            {
+                var guidViewHost = DefGuidList.guidIWpfTextViewHost;
+                userData.GetData(ref guidViewHost, out var holder);
+                var viewHost = (IWpfTextViewHost)holder;
+                view = viewHost.TextView;
+            }
+
+            return view;
+        }
+
+        IVsTextView GetIVsTextView(string filePath)
+        {
+            return VsShellUtilities.IsDocumentOpen(_serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
+                ? VsShellUtilities.GetTextView(windowFrame) : null;
+        }
+
+        IVsOutputWindowPane _outputWindowPane;
+        Guid _outputWindowPaneGuid = new Guid("8AEEC946-659A-4D14-8340-730B2A0FF39C");
+
+        void OutputString(string message)
+        {
+            if (_outputWindowPane == null)
+            {
+                var outWindow = (IVsOutputWindow)Package.GetGlobalService(typeof(SVsOutputWindow));
+                outWindow.CreatePane(ref _outputWindowPaneGuid, "VSFormatOnSave", 1, 1);
+                outWindow.GetPane(ref _outputWindowPaneGuid, out _outputWindowPane);
+            }
+
+            _outputWindowPane.OutputString(message + Environment.NewLine);
+            _outputWindowPane.Activate(); // Brings this pane into view
+        }
+
+
     }
 }

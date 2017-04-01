@@ -59,11 +59,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AllowDenyDocumentFilter.cs" />
-    <Compile Include="FormatOnSaveService.cs" />
+    <Compile Include="SolutionExplorerContextMenu.cs" />
+    <Compile Include="VsRunningDocTableEventsHandler.cs" />
     <Compile Include="OptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Guids.cs" />
+    <Compile Include="PkgCmdId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -80,10 +82,15 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <VSCTCompile Include="VSFormatOnSave.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
+    </VSCTCompile>
     <None Include="Key.snk" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="README.md" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
