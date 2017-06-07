@@ -55,13 +55,29 @@ namespace Tinyfish.FormatOnSave
         [Description("Enable tab to space on save. Depends on tabs options for the type of file.")]
         public bool EnableTabToSpace { get; set; } = true;
 
+        [Category("On Save")]
+        [Description("Enable force file encoding to UTF8 with BOM on save.")]
+        public bool EnableForceUtf8WithBom { get; set; } = true;
+
+        [Category("On Save")]
+        [Description("Allow extentions for ForceUtf8WithBom only. Space separated list. For example: .cs .html .cshtml .vb")]
+        public string AllowForceUtf8WithBomExtentions { get; set; } = string.Empty;
+
+        [Category("On Save")]
+        [Description("Deny extentions for ForceUtf8WithBom only. Space separated list. For example: .cs .html .cshtml .vb")]
+        public string DenyForceUtf8WithBomExtentions { get; set; } = string.Empty;
+
         public AllowDenyDocumentFilter AllowDenyFormatDocumentFilter;
+        public AllowDenyDocumentFilter AllowDenyForceUtf8WithBomFilter;
         public AllowDenyDocumentFilter AllowDenyFilter;
 
         void UpdateSettings()
         {
             AllowDenyFormatDocumentFilter = new AllowDenyDocumentFilter(
                 AllowFormatDocumentExtentions.Split(' '), DenyFormatDocumentExtentions.Split(' '));
+
+            AllowDenyForceUtf8WithBomFilter = new AllowDenyDocumentFilter(
+                AllowForceUtf8WithBomExtentions.Split(' '), DenyForceUtf8WithBomExtentions.Split(' '));
 
             AllowDenyFilter = new AllowDenyDocumentFilter(
                 AllowExtentions.Split(' '), DenyExtentions.Split(' '));
