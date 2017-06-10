@@ -27,11 +27,11 @@ namespace Tinyfish.FormatOnSave
     public class FormatOnSavePackage : Package
     {
         public DTE2 Dte;
-        IVsTextManager _textManager;
+        private IVsTextManager _textManager;
         public OptionsPage OptionsPage;
-        RunningDocumentTable _runningDocumentTable;
-        ServiceProvider _serviceProvider;
-        ITextUndoHistoryRegistry _undoHistoryRegistry;
+        private RunningDocumentTable _runningDocumentTable;
+        private ServiceProvider _serviceProvider;
+        private ITextUndoHistoryRegistry _undoHistoryRegistry;
         public OleMenuCommandService MenuCommandService;
 
         protected override void Initialize()
@@ -42,7 +42,7 @@ namespace Tinyfish.FormatOnSave
             OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
 
             Dte = (DTE2)GetGlobalService(typeof(SDTE));
-            _textManager = (IVsTextManager)GetGlobalService(typeof(SVsTextManager));
+            _textManager = (IVsTextManager)GetGlobalService(typeof(SVsTextManager)); // never used => remove?
             _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
             var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
@@ -59,7 +59,7 @@ namespace Tinyfish.FormatOnSave
             Format(document);
         }
 
-        Document FindDocument(uint docCookie)
+        private Document FindDocument(uint docCookie)
         {
             var documentInfo = _runningDocumentTable.GetDocumentInfo(docCookie);
             var documentPath = documentInfo.Moniker;
@@ -124,16 +124,16 @@ namespace Tinyfish.FormatOnSave
             return true;
         }
 
-        static bool IsCsFile(Document document)
+        private static bool IsCsFile(Document document)
         {
             return document.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
         }
 
-        void RemoveAndSort()
+        private void RemoveAndSort()
         {
             try
             {
-                Dte.ExecuteCommand("Edit.RemoveAndSort", "");
+                Dte.ExecuteCommand("Edit.RemoveAndSort", string.Empty);
             }
             catch (COMException)
             {
@@ -141,11 +141,11 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void FormatDocument()
+        private void FormatDocument()
         {
             try
             {
-                Dte.ExecuteCommand("Edit.FormatDocument", "");
+                Dte.ExecuteCommand("Edit.FormatDocument", string.Empty);
 
             }
             catch (COMException)
@@ -154,27 +154,28 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void UnifyLineBreak(IWpfTextView wpfTextView)
+        private void UnifyLineBreak(ITextView wpfTextView)
         {
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
-                var defaultLineBreak = "";
+                string defaultLineBreak;
                 switch (OptionsPage.LineBreak)
                 {
-                case OptionsPage.LineBreakStyle.Unix:
-                    defaultLineBreak = "\n";
-                    break;
-                case OptionsPage.LineBreakStyle.Windows:
-                    defaultLineBreak = "\r\n";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                    case OptionsPage.LineBreakStyle.Unix:
+                        defaultLineBreak = "\n";
+                        break;
+                    case OptionsPage.LineBreakStyle.Windows:
+                        defaultLineBreak = "\r\n";
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 foreach (var line in snapshot.Lines)
                 {
-                    if (line.GetLineBreakText() == defaultLineBreak)
+                    // if line break is defaultLineBreak or the line is the last => continue;
+                    if (line.GetLineBreakText() == defaultLineBreak || line.LineNumber == snapshot.LineCount - 1)
                         continue;
 
                     edit.Delete(line.End.Position, line.LineBreakLength);
@@ -185,9 +186,9 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void UnifyEndOfFile(IWpfTextView wpfTextView)
+        private static void UnifyEndOfFile(ITextView textView)
         {
-            var snapshot = wpfTextView.TextSnapshot;
+            var snapshot = textView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
                 var lineNumber = snapshot.LineCount - 1;
@@ -228,8 +229,7 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        readonly byte[] _fileBom = new byte[16];
-        void ForceUtf8WithBom(IWpfTextView wpfTextView)
+        private static void ForceUtf8WithBom(ITextView wpfTextView)
         {
             try
             {
@@ -246,7 +246,7 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        class SpaceStringPool
+        private class SpaceStringPool
         {
             readonly string[] _stringCache = new string[8];
 
@@ -268,9 +268,9 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
+        private readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
 
-        void TabToSpace(IWpfTextView wpfTextView, int tabSize)
+        private void TabToSpace(ITextView wpfTextView, int tabSize)
         {
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
@@ -310,7 +310,7 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        readonly Regex _cjkRegex = new Regex(
+        private readonly Regex _cjkRegex = new Regex(
             @"\p{IsHangulJamo}|" +
             @"\p{IsCJKRadicalsSupplement}|" +
             @"\p{IsCJKSymbolsandPunctuation}|" +
@@ -322,12 +322,12 @@ namespace Tinyfish.FormatOnSave
             @"\p{IsCJKCompatibilityForms}|" +
             @"\p{IsHalfwidthandFullwidthForms}");
 
-        bool IsCjkCharacter(char character)
+        private bool IsCjkCharacter(char character)
         {
             return _cjkRegex.IsMatch(character.ToString());
         }
 
-        static IWpfTextView GetWpfTextView(IVsTextView vTextView)
+        private static IWpfTextView GetWpfTextView(IVsTextView vTextView)
         {
             IWpfTextView view = null;
             var userData = (IVsUserData)vTextView;
@@ -343,14 +343,14 @@ namespace Tinyfish.FormatOnSave
             return view;
         }
 
-        IVsTextView GetIVsTextView(string filePath)
+        private IVsTextView GetIVsTextView(string filePath)
         {
             return VsShellUtilities.IsDocumentOpen(_serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
                 ? VsShellUtilities.GetTextView(windowFrame) : null;
         }
 
         IVsOutputWindowPane _outputWindowPane;
-        Guid _outputWindowPaneGuid = new Guid("8AEEC946-659A-4D14-8340-730B2A0FF39C");
+        private Guid _outputWindowPaneGuid = new Guid("8AEEC946-659A-4D14-8340-730B2A0FF39C");
 
         void OutputString(string message)
         {
