@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="73e31bd4-5e3f-4160-a212-ac992f0a9126" Version="1.8" Language="en-US" Publisher="Winston Feng" />
+    <Identity Id="73e31bd4-5e3f-4160-a212-ac992f0a9126" Version="1.9" Language="en-US" Publisher="Winston Feng" />
     <DisplayName>Format on Save</DisplayName>
     <Description xml:space="preserve">Automatically format document on save. Current release includes RemoveAndSort, FormatDoucment, UnifyLineBreak, UnifyEndOfFile, TabToSpace, ForceUtf8WithBom with file extension filters.</Description>
     <MoreInfo>https://visualstudiogallery.msdn.microsoft.com/73e31bd4-5e3f-4160-a212-ac992f0a9126</MoreInfo>
