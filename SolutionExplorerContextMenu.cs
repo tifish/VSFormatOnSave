@@ -100,20 +100,18 @@ namespace Tinyfish.FormatOnSave
         void FormatOnSaveInProjectItem(ProjectItem item)
         {
             if (!_package.OptionsPage.AllowDenyFilter.IsAllowed(item.Name))
-            {
                 return;
-            }
 
             Window documentWindow = null;
             if (!item.IsOpen)
             {
                 documentWindow = item.Open();
+                if (documentWindow == null)
+                    return;
             }
 
             if (_package.Format(item.Document))
-            {
-                item.Save();
-            }
+                item.Document.Save();
 
             documentWindow?.Close();
         }
