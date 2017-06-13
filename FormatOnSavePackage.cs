@@ -144,7 +144,6 @@ namespace Tinyfish.FormatOnSave
             try
             {
                 Dte.ExecuteCommand("Edit.FormatDocument", string.Empty);
-
             }
             catch (COMException)
             {
