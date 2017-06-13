@@ -27,7 +27,6 @@ namespace Tinyfish.FormatOnSave
     public class FormatOnSavePackage : Package
     {
         public DTE2 Dte;
-        IVsTextManager _textManager;
         public OptionsPage OptionsPage;
         RunningDocumentTable _runningDocumentTable;
         ServiceProvider _serviceProvider;
@@ -42,7 +41,6 @@ namespace Tinyfish.FormatOnSave
             OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
 
             Dte = (DTE2)GetGlobalService(typeof(SDTE));
-            _textManager = (IVsTextManager)GetGlobalService(typeof(SVsTextManager)); // never used => remove?
             _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
             var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
@@ -364,7 +362,5 @@ namespace Tinyfish.FormatOnSave
             _outputWindowPane.OutputString(message + Environment.NewLine);
             _outputWindowPane.Activate(); // Brings this pane into view
         }
-
-
     }
 }
