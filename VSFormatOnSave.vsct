@@ -16,12 +16,17 @@
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetProject" id="MenuGroupProject" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ"/>
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetSolution" id="MenuGroupSolution" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNNODE"/>
       </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetSolutionFolder" id="MenuGroupSolution" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNFOLDER"/>
+      </Group>
+
     </Groups>
 
     <Buttons>
@@ -37,7 +42,7 @@
         <Parent guid="GuidFormatOnSaveCmdSetFolder" id="MenuGroupFolder" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Format(FormatOnSave) In This Folder</ButtonText>
+          <ButtonText>Format(FormatOnSave) In Folder(s)</ButtonText>
         </Strings>
       </Button>
 
@@ -45,7 +50,7 @@
         <Parent guid="GuidFormatOnSaveCmdSetProject" id="MenuGroupProject" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Format(FormatOnSave) In This Project</ButtonText>
+          <ButtonText>Format(FormatOnSave) In Project(s)</ButtonText>
         </Strings>
       </Button>
 
@@ -53,9 +58,18 @@
         <Parent guid="GuidFormatOnSaveCmdSetSolution" id="MenuGroupSolution" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Format(FormatOnSave) In This Solution</ButtonText>
+          <ButtonText>Format(FormatOnSave) In Solution</ButtonText>
         </Strings>
       </Button>
+
+      <Button guid="GuidFormatOnSaveCmdSetSolutionFolder" id="CmdIdFormatOnSaveSolutionFolder" priority="0x0500" type="Button">
+        <Parent guid="GuidFormatOnSaveCmdSetSolutionFolder" id="MenuGroupSolution" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Format(FormatOnSave) In Solution Folder(s)</ButtonText>
+        </Strings>
+      </Button>
+
     </Buttons>
   </Commands>
 
@@ -81,6 +95,12 @@
       <IDSymbol name="MenuGroupSolution" value="0x1020" />
       <IDSymbol name="CmdIdFormatOnSaveSolution" value="0x0103" />
     </GuidSymbol>
+
+    <GuidSymbol name="GuidFormatOnSaveCmdSetSolutionFolder" value="{184023d6-1c7f-4d8b-a823-2b205fac7308}">
+      <IDSymbol name="MenuGroupSolution" value="0x1020" />
+      <IDSymbol name="CmdIdFormatOnSaveSolutionFolder" value="0x0104" />
+    </GuidSymbol>
+
   </Symbols>
 
 </CommandTable>

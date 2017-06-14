@@ -1,6 +1,8 @@
 ﻿using EnvDTE;
+using EnvDTE80;
 using System;
 using System.ComponentModel.Design;
+using System.Runtime.InteropServices;
 
 namespace Tinyfish.FormatOnSave
 {
@@ -44,76 +46,104 @@ namespace Tinyfish.FormatOnSave
                 Enabled = true
             };
             mcs.AddCommand(menuItem);
+
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolutionFolder, (int)PkgCmdIdList.CmdIdFormatOnSaveSolutionFolder);
+            menuItem = new MenuCommand(FormatOnSaveInSolutionFolderEventHandler, menuCommandId)
+            {
+                Visible = true,
+                Enabled = true
+            };
+            mcs.AddCommand(menuItem);
         }
 
         void FormatOnSaveInFileEventHandler(object sender, EventArgs e)
         {
-            foreach (SelectedItem selectedItem in _package.Dte.SelectedItems)
-            {
-                var projectItem = selectedItem.ProjectItem;
-                FormatOnSaveInProjectItem(projectItem);
-            }
+            FormatSelectedItems();
         }
 
         void FormatOnSaveInFolderEventHandler(object sender, EventArgs e)
         {
-            foreach (SelectedItem selectedItem in _package.Dte.SelectedItems)
-            {
-                var projectItem = selectedItem.ProjectItem;
-                FormatOnSaveInProjectItems(projectItem.ProjectItems);
-            }
+            FormatSelectedItems();
         }
 
         void FormatOnSaveInProjectEventHandler(object sender, EventArgs e)
         {
-            foreach (SelectedItem selectedItem in _package.Dte.SelectedItems)
-            {
-                var selectedProject = selectedItem.Project;
-                FormatOnSaveInProjectItems(selectedProject.ProjectItems);
-            }
+            FormatSelectedItems();
         }
 
         void FormatOnSaveInSolutionEventHandler(object sender, EventArgs e)
         {
-            var currentSolution = _package.Dte.Solution;
-            foreach (Project project in currentSolution)
-            {
-                FormatOnSaveInProjectItems(project.ProjectItems);
-            }
+            FormatSelectedItems();
         }
 
-        void FormatOnSaveInProjectItems(ProjectItems projectItems)
+        void FormatOnSaveInSolutionFolderEventHandler(object sender, EventArgs e)
         {
-            foreach (ProjectItem item in projectItems)
-            {
-                if (item.ProjectItems != null && item.ProjectItems.Count > 0)
-                {
-                    FormatOnSaveInProjectItems(item.ProjectItems);
-                }
-                else
-                {
-                    FormatOnSaveInProjectItem(item);
-                }
-            }
+            FormatSelectedItems();
         }
 
-        void FormatOnSaveInProjectItem(ProjectItem item)
+        void FormatSelectedItems()
+        {
+            foreach (UIHierarchyItem selectedItem in (object[])_package.Dte.ToolWindows.SolutionExplorer.SelectedItems)
+                FormatItem(selectedItem.Object);
+        }
+
+        void FormatItem(object item)
+        {
+            var solution = item as Solution;
+            if (solution != null)
+            {
+                foreach (Project subProject in solution.Projects)
+                    FormatItem(subProject);
+                return;
+            }
+
+            var project = item as Project;
+            if (project != null)
+            {
+                if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
+                    foreach (ProjectItem projectSubItem in project.ProjectItems)
+                        FormatItem(projectSubItem.SubProject);
+                else
+                    foreach (ProjectItem projectSubItem in project.ProjectItems)
+                        FormatItem(projectSubItem);
+                return;
+            }
+
+            var projectItem = item as ProjectItem;
+            if (projectItem != null)
+                if (projectItem.ProjectItems != null && projectItem.ProjectItems.Count > 0)
+                    foreach (ProjectItem subProjectItem in projectItem.ProjectItems)
+                        FormatItem(subProjectItem);
+                else
+                    FormatProjectItem(projectItem);
+        }
+
+        void FormatProjectItem(ProjectItem item)
         {
             if (!_package.OptionsPage.AllowDenyFilter.IsAllowed(item.Name))
                 return;
 
             Window documentWindow = null;
-            if (!item.IsOpen)
+            try
             {
-                documentWindow = item.Open();
-                if (documentWindow == null)
-                    return;
+                if (!item.IsOpen)
+                {
+                    documentWindow = item.Open();
+                    if (documentWindow == null)
+                        return;
+                }
+
+                if (_package.Format(item.Document))
+                    item.Document.Save();
             }
-
-            if (_package.Format(item.Document))
-                item.Document.Save();
-
-            documentWindow?.Close();
+            catch (COMException)
+            {
+                _package.OutputString($"Failed to process {item.Name}.");
+            }
+            finally
+            {
+                documentWindow?.Close();
+            }
         }
     }
 }
