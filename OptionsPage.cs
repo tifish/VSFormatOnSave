@@ -19,6 +19,10 @@ namespace Tinyfish.FormatOnSave
         public bool EnableRemoveAndSort { get; set; } = true;
 
         [Category("On Save")]
+        [Description("Apply remove and sort to .cs without #if. Remove and sort must be enabled first.")]
+        public bool EnableSmartRemoveAndSort { get; set; } = true;
+
+        [Category("On Save")]
         [Description("Enable format document on save.")]
         public bool EnableFormatDocument { get; set; } = true;
 

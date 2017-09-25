@@ -67,7 +67,8 @@ namespace Tinyfish.FormatOnSave
 
         public bool Format(Document document)
         {
-            if (document == null || document.Type != "Text" || document.Language == null || document.Language == "Plain Text")
+            if (document == null || document.Type != "Text" || document.Language == null ||
+                document.Language == "Plain Text")
                 return false;
 
             document.Activate();
@@ -87,7 +88,7 @@ namespace Tinyfish.FormatOnSave
 
             using (var undo = history?.CreateTransaction("Format on save"))
             {
-                vsTextView.GetCaretPos(out int oldCaretLine, out int oldCaretColumn);
+                vsTextView.GetCaretPos(out var oldCaretLine, out var oldCaretColumn);
                 vsTextView.SetCaretPos(oldCaretLine, 0);
 
                 // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
@@ -95,13 +96,18 @@ namespace Tinyfish.FormatOnSave
                     TabToSpace(wpfTextView, document.TabSize);
 
                 if (OptionsPage.EnableRemoveAndSort && IsCsFile(document))
-                    RemoveAndSort();
+                {
+                    if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
+                        RemoveAndSort();
+                }
 
-                if (OptionsPage.EnableFormatDocument && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
+                if (OptionsPage.EnableFormatDocument &&
+                    OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
                     FormatDocument();
 
                 // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-                if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs && Dte.Version == "15.0" && document.Language == "C/C++")
+                if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs && Dte.Version == "15.0" &&
+                    document.Language == "C/C++")
                     TabToSpace(wpfTextView, document.TabSize);
 
                 if (OptionsPage.EnableUnifyLineBreak && isFilterAllowed)
@@ -110,10 +116,11 @@ namespace Tinyfish.FormatOnSave
                 if (OptionsPage.EnableUnifyEndOfFile && isFilterAllowed)
                     UnifyEndOfFile(wpfTextView);
 
-                if (OptionsPage.EnableForceUtf8WithBom && OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
+                if (OptionsPage.EnableForceUtf8WithBom &&
+                    OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
                     ForceUtf8WithBom(wpfTextView);
 
-                vsTextView.GetCaretPos(out int newCaretLine, out int newCaretColumn);
+                vsTextView.GetCaretPos(out var newCaretLine, out var newCaretColumn);
                 vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
 
                 undo?.Complete();
@@ -127,6 +134,11 @@ namespace Tinyfish.FormatOnSave
             return document.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
         }
 
+        static bool HasIfCompilerDirective(ITextView wpfTextView)
+        {
+            return wpfTextView.TextSnapshot.GetText().Contains("#if");
+        }
+
         void RemoveAndSort()
         {
             try
@@ -135,7 +147,6 @@ namespace Tinyfish.FormatOnSave
             }
             catch (COMException)
             {
-
             }
         }
 
@@ -147,7 +158,6 @@ namespace Tinyfish.FormatOnSave
             }
             catch (COMException)
             {
-
             }
         }
 
@@ -190,7 +200,9 @@ namespace Tinyfish.FormatOnSave
             {
                 var lineNumber = snapshot.LineCount - 1;
                 while (lineNumber >= 0 && snapshot.GetLineFromLineNumber(lineNumber).GetText().Trim() == "")
+                {
                     lineNumber--;
+                }
 
                 var hasModified = false;
                 var startEmptyLineNumber = lineNumber + 1;
@@ -216,7 +228,8 @@ namespace Tinyfish.FormatOnSave
                 else if (startEmptyLineNumber <= snapshot.LineCount - 1)
                 {
                     var startPosition = snapshot.GetLineFromLineNumber(startEmptyLineNumber).Start.Position;
-                    var endPosition = snapshot.GetLineFromLineNumber(snapshot.LineCount - 1).EndIncludingLineBreak.Position;
+                    var endPosition = snapshot.GetLineFromLineNumber(snapshot.LineCount - 1).EndIncludingLineBreak
+                        .Position;
                     edit.Delete(startPosition, endPosition - startPosition);
                     hasModified = true;
                 }
@@ -239,7 +252,6 @@ namespace Tinyfish.FormatOnSave
             }
             catch (Exception)
             {
-
             }
         }
 
@@ -296,9 +308,7 @@ namespace Tinyfish.FormatOnSave
                             hasModifed = true;
                         }
                         else if (IsCjkCharacter(currentChar))
-                        {
                             positionOffset++;
-                        }
                     }
                 }
 
@@ -342,8 +352,10 @@ namespace Tinyfish.FormatOnSave
 
         IVsTextView GetIVsTextView(string filePath)
         {
-            return VsShellUtilities.IsDocumentOpen(_serviceProvider, filePath, Guid.Empty, out var uiHierarchy, out uint itemId, out var windowFrame)
-                ? VsShellUtilities.GetTextView(windowFrame) : null;
+            return VsShellUtilities.IsDocumentOpen(_serviceProvider, filePath, Guid.Empty, out var uiHierarchy,
+                out var itemId, out var windowFrame)
+                ? VsShellUtilities.GetTextView(windowFrame)
+                : null;
         }
 
         IVsOutputWindowPane _outputWindowPane;
