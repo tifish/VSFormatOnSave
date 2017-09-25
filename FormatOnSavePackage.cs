@@ -1,4 +1,10 @@
-﻿using EnvDTE;
+﻿using System;
+using System.ComponentModel.Design;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -7,12 +13,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
-using System;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
 using DefGuidList = Microsoft.VisualStudio.Editor.DefGuidList;
 using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
@@ -119,6 +119,10 @@ namespace Tinyfish.FormatOnSave
                 if (OptionsPage.EnableForceUtf8WithBom &&
                     OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
                     ForceUtf8WithBom(wpfTextView);
+
+                if (OptionsPage.EnableRemoveTrailingSpaces && isFilterAllowed &&
+                    (Dte.Version == "11.0" || !OptionsPage.EnableFormatDocument))
+                    RemoveTrailingSpaces(wpfTextView);
 
                 vsTextView.GetCaretPos(out var newCaretLine, out var newCaretColumn);
                 vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
@@ -252,6 +256,33 @@ namespace Tinyfish.FormatOnSave
             }
             catch (Exception)
             {
+            }
+        }
+
+        static void RemoveTrailingSpaces(ITextView textView)
+        {
+            var snapshot = textView.TextSnapshot;
+            using (var edit = snapshot.TextBuffer.CreateEdit())
+            {
+                var hasModified = false;
+
+                for (var i = 0; i < snapshot.LineCount; i++)
+                {
+                    var line = snapshot.GetLineFromLineNumber(i);
+                    var lineText = line.GetText();
+
+                    var trimmedLength = lineText.TrimEnd().Length;
+                    if (trimmedLength == lineText.Length)
+                        continue;
+
+                    var spaceLength = lineText.Length - trimmedLength;
+                    var endPosition = line.End.Position;
+                    edit.Delete(endPosition - spaceLength, spaceLength);
+                    hasModified = true;
+                }
+
+                if (hasModified)
+                    edit.Apply();
             }
         }
 
