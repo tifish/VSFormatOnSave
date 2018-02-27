@@ -16,6 +16,10 @@ I found it convenient to unify source code format throughout the develope team. 
 
 ## Updates
 
+### v1.12
+
+* Reactivate current editing document after saving all.
+
 ### v1.11
 
 * Add SmartRemoveAndSort: Apply remove and sort to .cs without #if.
