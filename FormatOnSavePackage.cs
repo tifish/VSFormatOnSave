@@ -71,63 +71,71 @@ namespace Tinyfish.FormatOnSave
                 document.Language == "Plain Text")
                 return false;
 
+            var oldActiveDocument = Dte.ActiveDocument;
             document.Activate();
 
-            var languageOptions = Dte.Properties["TextEditor", document.Language];
-            var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
-            var isFilterAllowed = OptionsPage.AllowDenyFilter.IsAllowed(document.Name);
-
-            var vsTextView = GetIVsTextView(document.FullName);
-            if (vsTextView == null)
-                return false;
-            var wpfTextView = GetWpfTextView(vsTextView);
-            if (wpfTextView == null)
-                return false;
-
-            _undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
-
-            using (var undo = history?.CreateTransaction("Format on save"))
+            try
             {
-                vsTextView.GetCaretPos(out var oldCaretLine, out var oldCaretColumn);
-                vsTextView.SetCaretPos(oldCaretLine, 0);
+                var languageOptions = Dte.Properties["TextEditor", document.Language];
+                var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
+                var isFilterAllowed = OptionsPage.AllowDenyFilter.IsAllowed(document.Name);
 
-                // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-                if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs)
-                    TabToSpace(wpfTextView, document.TabSize);
+                var vsTextView = GetIVsTextView(document.FullName);
+                if (vsTextView == null)
+                    return false;
+                var wpfTextView = GetWpfTextView(vsTextView);
+                if (wpfTextView == null)
+                    return false;
 
-                if (OptionsPage.EnableRemoveAndSort && IsCsFile(document))
+                _undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
+
+                using (var undo = history?.CreateTransaction("Format on save"))
                 {
-                    if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
-                        RemoveAndSort();
+                    vsTextView.GetCaretPos(out var oldCaretLine, out var oldCaretColumn);
+                    vsTextView.SetCaretPos(oldCaretLine, 0);
+
+                    // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
+                    if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs)
+                        TabToSpace(wpfTextView, document.TabSize);
+
+                    if (OptionsPage.EnableRemoveAndSort && IsCsFile(document))
+                    {
+                        if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
+                            RemoveAndSort();
+                    }
+
+                    if (OptionsPage.EnableFormatDocument &&
+                        OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
+                        FormatDocument();
+
+                    // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
+                    if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs && Dte.Version == "15.0" &&
+                        document.Language == "C/C++")
+                        TabToSpace(wpfTextView, document.TabSize);
+
+                    if (OptionsPage.EnableUnifyLineBreak && isFilterAllowed)
+                        UnifyLineBreak(wpfTextView);
+
+                    if (OptionsPage.EnableUnifyEndOfFile && isFilterAllowed)
+                        UnifyEndOfFile(wpfTextView);
+
+                    if (OptionsPage.EnableForceUtf8WithBom &&
+                        OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
+                        ForceUtf8WithBom(wpfTextView);
+
+                    if (OptionsPage.EnableRemoveTrailingSpaces && isFilterAllowed &&
+                        (Dte.Version == "11.0" || !OptionsPage.EnableFormatDocument))
+                        RemoveTrailingSpaces(wpfTextView);
+
+                    vsTextView.GetCaretPos(out var newCaretLine, out var newCaretColumn);
+                    vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
+
+                    undo?.Complete();
                 }
-
-                if (OptionsPage.EnableFormatDocument &&
-                    OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
-                    FormatDocument();
-
-                // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-                if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs && Dte.Version == "15.0" &&
-                    document.Language == "C/C++")
-                    TabToSpace(wpfTextView, document.TabSize);
-
-                if (OptionsPage.EnableUnifyLineBreak && isFilterAllowed)
-                    UnifyLineBreak(wpfTextView);
-
-                if (OptionsPage.EnableUnifyEndOfFile && isFilterAllowed)
-                    UnifyEndOfFile(wpfTextView);
-
-                if (OptionsPage.EnableForceUtf8WithBom &&
-                    OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
-                    ForceUtf8WithBom(wpfTextView);
-
-                if (OptionsPage.EnableRemoveTrailingSpaces && isFilterAllowed &&
-                    (Dte.Version == "11.0" || !OptionsPage.EnableFormatDocument))
-                    RemoveTrailingSpaces(wpfTextView);
-
-                vsTextView.GetCaretPos(out var newCaretLine, out var newCaretColumn);
-                vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
-
-                undo?.Complete();
+            }
+            finally
+            {
+                oldActiveDocument?.Activate();
             }
 
             return true;
