@@ -16,7 +16,7 @@
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetProject" id="MenuGroupProject" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetSolution" id="MenuGroupSolution" priority="0x0600">
@@ -25,6 +25,26 @@
 
       <Group guid="GuidFormatOnSaveCmdSetSolutionFolder" id="MenuGroupSolution" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNFOLDER"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_SLNPROJ"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_SLNITEM"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_PROJITEM"/>
+      </Group>
+
+      <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIITEM"/>
       </Group>
 
     </Groups>
@@ -50,7 +70,7 @@
         <Parent guid="GuidFormatOnSaveCmdSetProject" id="MenuGroupProject" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Format(FormatOnSave) In Project(s)</ButtonText>
+          <ButtonText>Format(FormatOnSave) In Project</ButtonText>
         </Strings>
       </Button>
 
@@ -67,6 +87,14 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Format(FormatOnSave) In Solution Folder(s)</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="GuidFormatOnSaveCmdSetMultipleItems" id="CmdIdFormatOnSaveMultipleItems" priority="0x0500" type="Button">
+        <Parent guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Format(FormatOnSave) In Multiple Items</ButtonText>
         </Strings>
       </Button>
 
@@ -99,6 +127,11 @@
     <GuidSymbol name="GuidFormatOnSaveCmdSetSolutionFolder" value="{184023d6-1c7f-4d8b-a823-2b205fac7308}">
       <IDSymbol name="MenuGroupSolution" value="0x1020" />
       <IDSymbol name="CmdIdFormatOnSaveSolutionFolder" value="0x0104" />
+    </GuidSymbol>
+
+    <GuidSymbol name="GuidFormatOnSaveCmdSetMultipleItems" value="{dba98bcb-5b9f-4e71-9613-76d4aa8d25f7}">
+      <IDSymbol name="MenuGroupSolution" value="0x1020" />
+      <IDSymbol name="CmdIdFormatOnSaveMultipleItems" value="0x0105" />
     </GuidSymbol>
 
   </Symbols>

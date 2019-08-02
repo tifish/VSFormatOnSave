@@ -7,5 +7,6 @@
         public const uint CmdIdFormatOnSaveProject = 0x102;
         public const uint CmdIdFormatOnSaveSolution = 0x103;
         public const uint CmdIdFormatOnSaveSolutionFolder = 0x104;
+        public const uint CmdIdFormatOnSaveMultipleItems = 0x105;
     };
 }
