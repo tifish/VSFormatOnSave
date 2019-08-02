@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -13,18 +14,20 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Threading;
 using DefGuidList = Microsoft.VisualStudio.Editor.DefGuidList;
 using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+using Task = System.Threading.Tasks.Task;
 
 namespace Tinyfish.FormatOnSave
 {
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
-    [ProvideAutoLoad("{f1536ef8-92ec-443c-9ed7-fdadf150da82}")] //To set the UI context to autoload a VSPackage
+    [ProvideAutoLoad("{f1536ef8-92ec-443c-9ed7-fdadf150da82}", PackageAutoLoadFlags.BackgroundLoad)] //To set the UI context to autoload a VSPackage
     [Guid(GuidList.GuidFormatOnSavePkgString)]
     [ProvideOptionPage(typeof(OptionsPage), "Format on Save", "Settings", 0, 0, true)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    public class FormatOnSavePackage : Package
+    public class FormatOnSavePackage : AsyncPackage
     {
         public DTE2 Dte;
         public OptionsPage OptionsPage;
@@ -33,18 +36,18 @@ namespace Tinyfish.FormatOnSave
         ITextUndoHistoryRegistry _undoHistoryRegistry;
         public OleMenuCommandService MenuCommandService;
 
-        protected override void Initialize()
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            base.Initialize();
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             _runningDocumentTable = new RunningDocumentTable(this);
-            OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
+            OptionsPage = (OptionsPage) GetDialogPage(typeof(OptionsPage));
 
-            Dte = (DTE2)GetGlobalService(typeof(SDTE));
-            _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
-            var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
+            Dte = await GetServiceAsync(typeof(SDTE)) as DTE2;
+            _serviceProvider = new ServiceProvider((IServiceProvider) Dte);
+            var componentModel = (IComponentModel) GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
-            MenuCommandService = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            MenuCommandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
             var solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
 
             var plugin = new VsRunningDocTableEventsHandler(this);
@@ -77,7 +80,7 @@ namespace Tinyfish.FormatOnSave
             try
             {
                 var languageOptions = Dte.Properties["TextEditor", document.Language];
-                var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
+                var insertTabs = (bool) languageOptions.Item("InsertTabs").Value;
                 var isFilterAllowed = OptionsPage.AllowDenyFilter.IsAllowed(document.Name);
 
                 var vsTextView = GetIVsTextView(document.FullName);
@@ -181,14 +184,14 @@ namespace Tinyfish.FormatOnSave
                 string defaultLineBreak;
                 switch (OptionsPage.LineBreak)
                 {
-                case OptionsPage.LineBreakStyle.Unix:
-                    defaultLineBreak = "\n";
-                    break;
-                case OptionsPage.LineBreakStyle.Windows:
-                    defaultLineBreak = "\r\n";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                    case OptionsPage.LineBreakStyle.Unix:
+                        defaultLineBreak = "\n";
+                        break;
+                    case OptionsPage.LineBreakStyle.Windows:
+                        defaultLineBreak = "\r\n";
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 foreach (var line in snapshot.Lines)
@@ -312,6 +315,7 @@ namespace Tinyfish.FormatOnSave
                     _stringCache[index] = new string(' ', spaceCount);
                     return _stringCache[index];
                 }
+
                 return _stringCache[index];
             }
         }
@@ -376,13 +380,13 @@ namespace Tinyfish.FormatOnSave
         static IWpfTextView GetWpfTextView(IVsTextView vTextView)
         {
             IWpfTextView view = null;
-            var userData = (IVsUserData)vTextView;
+            var userData = (IVsUserData) vTextView;
 
             if (userData != null)
             {
                 var guidViewHost = DefGuidList.guidIWpfTextViewHost;
                 userData.GetData(ref guidViewHost, out var holder);
-                var viewHost = (IWpfTextViewHost)holder;
+                var viewHost = (IWpfTextViewHost) holder;
                 view = viewHost.TextView;
             }
 
@@ -404,7 +408,7 @@ namespace Tinyfish.FormatOnSave
         {
             if (_outputWindowPane == null)
             {
-                var outWindow = (IVsOutputWindow)GetGlobalService(typeof(SVsOutputWindow));
+                var outWindow = (IVsOutputWindow) GetGlobalService(typeof(SVsOutputWindow));
                 outWindow.CreatePane(ref _outputWindowPaneGuid, "VSFormatOnSave", 1, 1);
                 outWindow.GetPane(ref _outputWindowPaneGuid, out _outputWindowPane);
             }
