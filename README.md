@@ -16,6 +16,11 @@ I found it convenient to unify source code format throughout the develope team. 
 
 ## Updates
 
+### v2.0
+
+* Upgrade to AsyncPackage. Only supports Visual Studio 2015 and above.
+* Can format multiple items in solution view.
+
 ### v1.12
 
 * Reactivate current editing document after saving all.
