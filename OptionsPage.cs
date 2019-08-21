@@ -16,7 +16,7 @@ namespace Tinyfish.FormatOnSave
 
         [Category("On Save")]
         [Description("Enable remove and sort on save, only apply to .cs file.")]
-        public bool EnableRemoveAndSort { get; set; } = true;
+        public bool EnableRemoveAndSort { get; set; } = false;
 
         [Category("On Save")]
         [Description("Apply remove and sort to .cs without #if. Remove and sort must be enabled first.")]
@@ -36,7 +36,7 @@ namespace Tinyfish.FormatOnSave
 
         [Category("On Save")]
         [Description("Enable unify line break on save.")]
-        public bool EnableUnifyLineBreak { get; set; } = true;
+        public bool EnableUnifyLineBreak { get; set; } = false;
 
         [Category("On Save")]
         [Description("Allow extentions for all except FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
@@ -57,11 +57,11 @@ namespace Tinyfish.FormatOnSave
 
         [Category("On Save")]
         [Description("Enable tab to space on save. Depends on tabs options for the type of file.")]
-        public bool EnableTabToSpace { get; set; } = true;
+        public bool EnableTabToSpace { get; set; } = false;
 
         [Category("On Save")]
         [Description("Enable force file encoding to UTF8 with BOM on save.")]
-        public bool EnableForceUtf8WithBom { get; set; } = true;
+        public bool EnableForceUtf8WithBom { get; set; } = false;
 
         [Category("On Save")]
         [Description("Allow extentions for ForceUtf8WithBom only. Space separated list. For example: .cs .html .cshtml .vb")]
