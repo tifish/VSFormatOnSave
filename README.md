@@ -2,7 +2,7 @@ Automatically format document on save. Current release includes:
 
 * RemoveAndSort: Same as Edit > IntelliSense > Remove and Sort Usings
 * SmartRemoveAndSort: Apply remove and sort to .cs without #if.
-* FormatDoucment: Same as Edit > Advance > Format Document
+* FormatDocument: Same as Edit > Advance > Format Document
 * UnifyLineBreak: Enforce line break to CRLF or LF.
 * UnifyEndOfFile: Enforce only one line return at the end of file.
 * TabToSpace: Convert tab to space.
