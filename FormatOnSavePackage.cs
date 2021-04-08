@@ -14,7 +14,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.Threading;
 using DefGuidList = Microsoft.VisualStudio.Editor.DefGuidList;
 using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using Task = System.Threading.Tasks.Task;
@@ -35,6 +34,7 @@ namespace Tinyfish.FormatOnSave
         ServiceProvider _serviceProvider;
         ITextUndoHistoryRegistry _undoHistoryRegistry;
         public OleMenuCommandService MenuCommandService;
+        SolutionExplorerContextMenu _solutionExplorerContextMenu;
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -48,7 +48,7 @@ namespace Tinyfish.FormatOnSave
             var componentModel = (IComponentModel) GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
             MenuCommandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
-            var solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
+            _solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
 
             var plugin = new VsRunningDocTableEventsHandler(this);
             _runningDocumentTable.Advise(plugin);
@@ -56,20 +56,29 @@ namespace Tinyfish.FormatOnSave
 
         public void Format(uint docCookie)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var document = FindDocument(docCookie);
             Format(document);
         }
 
         Document FindDocument(uint docCookie)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var documentInfo = _runningDocumentTable.GetDocumentInfo(docCookie);
             var documentPath = documentInfo.Moniker;
 
-            return Dte.Documents.Cast<Document>().FirstOrDefault(doc => doc.FullName == documentPath);
+            foreach (Document doc in Dte.Documents)
+            {
+                if (doc.FullName == documentPath)
+                    return doc;
+            }
+
+            return null;
         }
 
         public bool Format(Document document)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (document == null || document.Type != "Text" || document.Language == null ||
                 document.Language == "Plain Text")
                 return false;
@@ -146,6 +155,7 @@ namespace Tinyfish.FormatOnSave
 
         static bool IsCsFile(Document document)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             return document.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
         }
 
@@ -406,6 +416,7 @@ namespace Tinyfish.FormatOnSave
 
         public void OutputString(string message)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (_outputWindowPane == null)
             {
                 var outWindow = (IVsOutputWindow) GetGlobalService(typeof(SVsOutputWindow));

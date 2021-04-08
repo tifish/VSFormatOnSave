@@ -1,6 +1,7 @@
 ﻿#region
 
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System.ComponentModel.Composition;
 
@@ -20,6 +21,7 @@ namespace Tinyfish.FormatOnSave
 
         public int OnBeforeSave(uint docCookie)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             _package.Format(docCookie);
 
             return VSConstants.S_OK;
