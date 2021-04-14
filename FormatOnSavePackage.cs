@@ -22,7 +22,8 @@ namespace Tinyfish.FormatOnSave
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
-    [ProvideAutoLoad("{f1536ef8-92ec-443c-9ed7-fdadf150da82}", PackageAutoLoadFlags.BackgroundLoad)] //To set the UI context to autoload a VSPackage
+    [ProvideAutoLoad("{f1536ef8-92ec-443c-9ed7-fdadf150da82}",
+        PackageAutoLoadFlags.BackgroundLoad)] //To set the UI context to autoload a VSPackage
     [Guid(GuidList.GuidFormatOnSavePkgString)]
     [ProvideOptionPage(typeof(OptionsPage), "Format on Save", "Settings", 0, 0, true)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
@@ -36,22 +37,33 @@ namespace Tinyfish.FormatOnSave
         public OleMenuCommandService MenuCommandService;
         SolutionExplorerContextMenu _solutionExplorerContextMenu;
 
+        /// <summary>
+        /// Initialization of the package; this method is called right after the package is sited, so this is the place
+        /// where you can put all the initialization code that rely on services provided by VisualStudio.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token to monitor for initialization cancellation, which can occur when VS is shutting down.</param>
+        /// <param name="progress">A provider for progress updates.</param>
+        /// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             _runningDocumentTable = new RunningDocumentTable(this);
-            OptionsPage = (OptionsPage) GetDialogPage(typeof(OptionsPage));
+            OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
 
             Dte = await GetServiceAsync(typeof(SDTE)) as DTE2;
-            _serviceProvider = new ServiceProvider((IServiceProvider) Dte);
-            var componentModel = (IComponentModel) GetGlobalService(typeof(SComponentModel));
+            _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
+
+            var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
+
             MenuCommandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
             _solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
 
             var plugin = new VsRunningDocTableEventsHandler(this);
             _runningDocumentTable.Advise(plugin);
+
+            await EnableDisableFormatOnSaveCommand.InitializeAsync(this);
         }
 
         public void Format(uint docCookie)
@@ -68,10 +80,8 @@ namespace Tinyfish.FormatOnSave
             var documentPath = documentInfo.Moniker;
 
             foreach (Document doc in Dte.Documents)
-            {
                 if (doc.FullName == documentPath)
                     return doc;
-            }
 
             return null;
         }
@@ -79,6 +89,7 @@ namespace Tinyfish.FormatOnSave
         public bool Format(Document document)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+
             if (document == null || document.Type != "Text" || document.Language == null ||
                 document.Language == "Plain Text")
                 return false;
@@ -89,7 +100,7 @@ namespace Tinyfish.FormatOnSave
             try
             {
                 var languageOptions = Dte.Properties["TextEditor", document.Language];
-                var insertTabs = (bool) languageOptions.Item("InsertTabs").Value;
+                var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
                 var isFilterAllowed = OptionsPage.AllowDenyFilter.IsAllowed(document.Name);
 
                 var vsTextView = GetIVsTextView(document.FullName);
@@ -111,10 +122,8 @@ namespace Tinyfish.FormatOnSave
                         TabToSpace(wpfTextView, document.TabSize);
 
                     if (OptionsPage.EnableRemoveAndSort && IsCsFile(document))
-                    {
                         if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
                             RemoveAndSort();
-                    }
 
                     if (OptionsPage.EnableFormatDocument &&
                         OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
@@ -225,9 +234,7 @@ namespace Tinyfish.FormatOnSave
             {
                 var lineNumber = snapshot.LineCount - 1;
                 while (lineNumber >= 0 && snapshot.GetLineFromLineNumber(lineNumber).GetText().Trim() == "")
-                {
                     lineNumber--;
-                }
 
                 var hasModified = false;
                 var startEmptyLineNumber = lineNumber + 1;
@@ -361,7 +368,9 @@ namespace Tinyfish.FormatOnSave
                             hasModifed = true;
                         }
                         else if (IsCjkCharacter(currentChar))
+                        {
                             positionOffset++;
+                        }
                     }
                 }
 
@@ -390,13 +399,13 @@ namespace Tinyfish.FormatOnSave
         static IWpfTextView GetWpfTextView(IVsTextView vTextView)
         {
             IWpfTextView view = null;
-            var userData = (IVsUserData) vTextView;
+            var userData = (IVsUserData)vTextView;
 
             if (userData != null)
             {
                 var guidViewHost = DefGuidList.guidIWpfTextViewHost;
                 userData.GetData(ref guidViewHost, out var holder);
-                var viewHost = (IWpfTextViewHost) holder;
+                var viewHost = (IWpfTextViewHost)holder;
                 view = viewHost.TextView;
             }
 
@@ -419,7 +428,7 @@ namespace Tinyfish.FormatOnSave
             ThreadHelper.ThrowIfNotOnUIThread();
             if (_outputWindowPane == null)
             {
-                var outWindow = (IVsOutputWindow) GetGlobalService(typeof(SVsOutputWindow));
+                var outWindow = (IVsOutputWindow)GetGlobalService(typeof(SVsOutputWindow));
                 outWindow.CreatePane(ref _outputWindowPaneGuid, "VSFormatOnSave", 1, 1);
                 outWindow.GetPane(ref _outputWindowPaneGuid, out _outputWindowPane);
             }

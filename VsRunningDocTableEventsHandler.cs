@@ -22,7 +22,9 @@ namespace Tinyfish.FormatOnSave
         public int OnBeforeSave(uint docCookie)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            _package.Format(docCookie);
+
+            if (_package.OptionsPage.Enabled)
+                _package.Format(docCookie);
 
             return VSConstants.S_OK;
         }

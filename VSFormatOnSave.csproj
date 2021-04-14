@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="AllowDenyDocumentFilter.cs" />
     <Compile Include="BinaryFileDetector.cs" />
+    <Compile Include="EnableDisableFormatOnSaveCommand.cs" />
     <Compile Include="SolutionExplorerContextMenu.cs" />
     <Compile Include="VsRunningDocTableEventsHandler.cs" />
     <Compile Include="OptionsPage.cs">
@@ -86,6 +87,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Resource Include="Resources\EnableDisableFormatOnSaveCommand.png" />
     <VSCTCompile Include="VSFormatOnSave.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
@@ -122,6 +124,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>packages\Microsoft.VisualStudio.CommandBars.8.0.0.1\lib\net10\Microsoft.VisualStudio.CommandBars.dll</HintPath>
       <Private>False</Private>

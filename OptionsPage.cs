@@ -8,6 +8,11 @@ namespace Tinyfish.FormatOnSave
     [Guid("1D9ECCF3-5D2F-4112-9B25-264596873DC9")]
     public class OptionsPage : DialogPage
     {
+        [Category("All")]
+        [DisplayName("Enable format on save")]
+        [Description("Enable format on save.")]
+        public bool Enabled { get; set; } = true;
+        
         public enum LineBreakStyle
         {
             Unix = 0,
