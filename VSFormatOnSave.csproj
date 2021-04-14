@@ -62,6 +62,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AllowDenyDocumentFilter.cs" />
+    <Compile Include="BinaryFileDetector.cs" />
     <Compile Include="SolutionExplorerContextMenu.cs" />
     <Compile Include="VsRunningDocTableEventsHandler.cs" />
     <Compile Include="OptionsPage.cs">

@@ -3,6 +3,7 @@ using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.ComponentModel.Design;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Tinyfish.FormatOnSave
@@ -165,6 +166,15 @@ namespace Tinyfish.FormatOnSave
             Window documentWindow = null;
             try
             {
+                if (item.FileCount == 0)
+                    return;
+
+                if (!File.Exists(item.FileNames[0]))
+                    return;
+
+                if (BinaryFileDetector.IsBinary(item.FileNames[0]))
+                    return;
+
                 if (!item.IsOpen)
                 {
                     documentWindow = item.Open();
@@ -175,9 +185,9 @@ namespace Tinyfish.FormatOnSave
                 if (_package.Format(item.Document))
                     item.Document.Save();
             }
-            catch (COMException)
+            catch (Exception ex)
             {
-                _package.OutputString($"Failed to process {item.Name}.");
+                _package.OutputString($"Failed to process {item.Name}. ${ex.Message}");
             }
             finally
             {
