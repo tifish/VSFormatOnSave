@@ -144,10 +144,6 @@ namespace Tinyfish.FormatOnSave
                         OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
                         ForceUtf8WithBom(wpfTextView);
 
-                    if (OptionsPage.EnableRemoveTrailingSpaces && isFilterAllowed &&
-                        (Dte.Version == "11.0" || !OptionsPage.EnableFormatDocument))
-                        RemoveTrailingSpaces(wpfTextView);
-
                     vsTextView.GetCaretPos(out var newCaretLine, out var newCaretColumn);
                     vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
 

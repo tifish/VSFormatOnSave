@@ -90,11 +90,6 @@ namespace Tinyfish.FormatOnSave
         [Description("Denied extensions for ForceUtf8WithBom only. Space separated list. For example: .cs .html .cshtml .vb")]
         public string DenyForceUtf8WithBomExtentions { get; set; } = string.Empty;
 
-        [Category("Others")]
-        [DisplayName("")]
-        [Description("Enable remove trailing spaces. It is mostly for Visual Sutdio 2012, which won't remove trailing spaces when formatting. In higher version than 2012, this will do nothing when FormatDocument is enabled.")]
-        public bool EnableRemoveTrailingSpaces { get; set; } = true;
-
         public AllowDenyDocumentFilter AllowDenyFormatDocumentFilter;
         public AllowDenyDocumentFilter AllowDenyForceUtf8WithBomFilter;
         public AllowDenyDocumentFilter AllowDenyFilter;
