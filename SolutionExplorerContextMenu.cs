@@ -1,8 +1,10 @@
-﻿using System;
-using System.ComponentModel.Design;
-using System.Runtime.InteropServices;
-using EnvDTE;
+﻿using EnvDTE;
 using EnvDTE80;
+using Microsoft.VisualStudio.Shell;
+using System;
+using System.ComponentModel.Design;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Tinyfish.FormatOnSave
 {
@@ -16,7 +18,7 @@ namespace Tinyfish.FormatOnSave
 
             var mcs = _package.MenuCommandService;
 
-            var menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFile, (int) PkgCmdIdList.CmdIdFormatOnSaveFile);
+            var menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFile, (int)PkgCmdIdList.CmdIdFormatOnSaveFile);
             var menuItem = new MenuCommand(FormatOnSaveInFileEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -24,7 +26,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFolder, (int) PkgCmdIdList.CmdIdFormatOnSaveFolder);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFolder, (int)PkgCmdIdList.CmdIdFormatOnSaveFolder);
             menuItem = new MenuCommand(FormatOnSaveInFolderEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -32,7 +34,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetProject, (int) PkgCmdIdList.CmdIdFormatOnSaveProject);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetProject, (int)PkgCmdIdList.CmdIdFormatOnSaveProject);
             menuItem = new MenuCommand(FormatOnSaveInProjectEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -40,7 +42,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetMultipleItems, (int) PkgCmdIdList.CmdIdFormatOnSaveMultipleItems);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetMultipleItems, (int)PkgCmdIdList.CmdIdFormatOnSaveMultipleItems);
             menuItem = new MenuCommand(FormatOnSaveInProjectEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -48,7 +50,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolution, (int) PkgCmdIdList.CmdIdFormatOnSaveSolution);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolution, (int)PkgCmdIdList.CmdIdFormatOnSaveSolution);
             menuItem = new MenuCommand(FormatOnSaveInSolutionEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -56,7 +58,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolutionFolder, (int) PkgCmdIdList.CmdIdFormatOnSaveSolutionFolder);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolutionFolder, (int)PkgCmdIdList.CmdIdFormatOnSaveSolutionFolder);
             menuItem = new MenuCommand(FormatOnSaveInSolutionFolderEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -67,32 +69,38 @@ namespace Tinyfish.FormatOnSave
 
         void FormatOnSaveInFileEventHandler(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
         void FormatOnSaveInFolderEventHandler(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
         void FormatOnSaveInProjectEventHandler(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
         void FormatOnSaveInSolutionEventHandler(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
         void FormatOnSaveInSolutionFolderEventHandler(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
         void FormatSelectedItems()
         {
-            foreach (UIHierarchyItem selectedItem in (object[]) _package.Dte.ToolWindows.SolutionExplorer.SelectedItems)
+            ThreadHelper.ThrowIfNotOnUIThread();
+            foreach (UIHierarchyItem selectedItem in (object[])_package.Dte.ToolWindows.SolutionExplorer.SelectedItems)
             {
                 FormatItem(selectedItem.Object);
             }
@@ -100,47 +108,48 @@ namespace Tinyfish.FormatOnSave
 
         void FormatItem(object item)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             switch (item)
             {
                 case Solution solution:
-                {
-                    foreach (Project subProject in solution.Projects)
                     {
-                        FormatItem(subProject);
-                    }
+                        foreach (Project subProject in solution.Projects)
+                        {
+                            FormatItem(subProject);
+                        }
 
-                    return;
-                }
+                        return;
+                    }
 
                 case Project project:
-                {
-                    if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
                     {
-                        foreach (ProjectItem projectSubItem in project.ProjectItems)
+                        if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
                         {
-                            FormatItem(projectSubItem.SubProject);
+                            foreach (ProjectItem projectSubItem in project.ProjectItems)
+                            {
+                                FormatItem(projectSubItem.SubProject);
+                            }
                         }
-                    }
-                    else
-                    {
-                        foreach (ProjectItem projectSubItem in project.ProjectItems)
+                        else
                         {
-                            FormatItem(projectSubItem);
+                            foreach (ProjectItem projectSubItem in project.ProjectItems)
+                            {
+                                FormatItem(projectSubItem);
+                            }
                         }
+
+                        return;
                     }
 
-                    return;
-                }
-
-                case  ProjectItem projectItem when projectItem.ProjectItems != null && projectItem.ProjectItems.Count > 0:
-                {
-                    foreach (ProjectItem subProjectItem in projectItem.ProjectItems)
+                case ProjectItem projectItem when projectItem.ProjectItems != null && projectItem.ProjectItems.Count > 0:
                     {
-                        FormatItem(subProjectItem);
-                    }
+                        foreach (ProjectItem subProjectItem in projectItem.ProjectItems)
+                        {
+                            FormatItem(subProjectItem);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case ProjectItem projectItem:
                     FormatProjectItem(projectItem);
@@ -150,12 +159,22 @@ namespace Tinyfish.FormatOnSave
 
         void FormatProjectItem(ProjectItem item)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (!_package.OptionsPage.AllowDenyFilter.IsAllowed(item.Name))
                 return;
 
             Window documentWindow = null;
             try
             {
+                if (item.FileCount == 0)
+                    return;
+
+                if (!File.Exists(item.FileNames[0]))
+                    return;
+
+                if (BinaryFileDetector.IsBinary(item.FileNames[0]))
+                    return;
+
                 if (!item.IsOpen)
                 {
                     documentWindow = item.Open();
@@ -166,9 +185,9 @@ namespace Tinyfish.FormatOnSave
                 if (_package.Format(item.Document))
                     item.Document.Save();
             }
-            catch (COMException)
+            catch (Exception ex)
             {
-                _package.OutputString($"Failed to process {item.Name}.");
+                _package.OutputString($"Failed to process {item.Name}. ${ex.Message}");
             }
             finally
             {

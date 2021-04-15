@@ -1,52 +1,55 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <Extern href="stdidcmd.h"/>
+  <Extern href="stdidcmd.h" />
 
-  <Extern href="vsshlids.h"/>
+  <Extern href="vsshlids.h" />
 
   <Commands package="GuidFormatOnSavePkg">
     <Groups>
       <Group guid="GuidFormatOnSaveCmdSetFile" id="MenuGroupFile" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetFolder" id="MenuGroupFolder" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetProject" id="MenuGroupProject" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetSolution" id="MenuGroupSolution" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNNODE"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNNODE" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetSolutionFolder" id="MenuGroupSolution" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNFOLDER"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNFOLDER" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_SLNPROJ"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_SLNPROJ" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_SLNITEM"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_SLNITEM" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_PROJITEM"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_PROJITEM" />
       </Group>
 
       <Group guid="GuidFormatOnSaveCmdSetMultipleItems" id="MenuGroupSolution" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIITEM"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIITEM" />
       </Group>
 
+      <Group guid="guidFormatOnSavePackageCmdSet" id="ToolsMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+      </Group>
     </Groups>
 
     <Buttons>
@@ -98,7 +101,17 @@
         </Strings>
       </Button>
 
+      <Button guid="guidFormatOnSavePackageCmdSet" id="cmdidEnableDisableFormatOnSaveCommand" priority="0x0100" type="Button">
+        <Parent guid="guidFormatOnSavePackageCmdSet" id="ToolsMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Enable Format on Save</ButtonText>
+        </Strings>
+      </Button>
     </Buttons>
+    <Bitmaps>
+      <Bitmap guid="guidImages" href="Resources\EnableDisableFormatOnSaveCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
+    </Bitmaps>
   </Commands>
 
   <Symbols>
@@ -133,7 +146,20 @@
       <IDSymbol name="MenuGroupSolution" value="0x1020" />
       <IDSymbol name="CmdIdFormatOnSaveMultipleItems" value="0x0105" />
     </GuidSymbol>
-
+  
+    <GuidSymbol value="{d787d099-5ebf-4f09-9ef3-10d7cda25bcd}" name="guidFormatOnSavePackageCmdSet">
+      <IDSymbol value="4128" name="ToolsMenuGroup" />
+      <IDSymbol value="256" name="cmdidEnableDisableFormatOnSaveCommand" />
+    </GuidSymbol>
+  
+    <GuidSymbol value="{eda39203-1593-49e5-8b48-6af8bb40d371}" name="guidImages">
+      <IDSymbol name="bmpPic1" value="1" />
+      <IDSymbol name="bmpPic2" value="2" />
+      <IDSymbol name="bmpPicSearch" value="3" />
+      <IDSymbol name="bmpPicX" value="4" />
+      <IDSymbol name="bmpPicArrows" value="5" />
+      <IDSymbol name="bmpPicStrikethrough" value="6" />
+    </GuidSymbol>
   </Symbols>
 
 </CommandTable>
