@@ -46,22 +46,24 @@ namespace Tinyfish.FormatOnSave
         /// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
-            _runningDocumentTable = new RunningDocumentTable(this);
-            OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
-
             Dte = await GetServiceAsync(typeof(SDTE)) as DTE2;
             _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
 
             var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
 
-            MenuCommandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
-            _solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
-
             var plugin = new VsRunningDocTableEventsHandler(this);
+            
+            MenuCommandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
+
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            _runningDocumentTable = new RunningDocumentTable(this);
             _runningDocumentTable.Advise(plugin);
+
+            OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
+
+            _solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
 
             await EnableDisableFormatOnSaveCommand.InitializeAsync(this);
         }
