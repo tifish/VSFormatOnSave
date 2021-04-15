@@ -21,7 +21,7 @@ namespace Tinyfish.FormatOnSave
 
         [Category("Remove and sort")]
         [DisplayName("Enable remove and sort")]
-        [Description("Enable remove and sort on save, only apply to .cs file.")]
+        [Description("Enable remove and sort, only apply to .cs file.")]
         public bool EnableRemoveAndSort { get; set; } = false;
 
         [Category("Remove and sort")]
@@ -31,7 +31,7 @@ namespace Tinyfish.FormatOnSave
 
         [Category("Format")]
         [DisplayName("Enable format document")]
-        [Description("Enable format document on save.")]
+        [Description("Enable format document.")]
         public bool EnableFormatDocument { get; set; } = true;
 
         [Category("Format")]
@@ -46,7 +46,7 @@ namespace Tinyfish.FormatOnSave
 
         [Category("Line break")]
         [DisplayName("Enable unify line break")]
-        [Description("Enable unify line break on save.")]
+        [Description("Enable unify line break.")]
         public bool EnableUnifyLineBreak { get; set; } = false;
 
         [Category("Line break")]
@@ -56,7 +56,7 @@ namespace Tinyfish.FormatOnSave
 
         [Category("Line break")]
         [DisplayName("Enable unify end of file")]
-        [Description("Enable unify end of file to one empty line on save.")]
+        [Description("Enable unify end of file to one empty line.")]
         public bool EnableUnifyEndOfFile { get; set; } = true;
 
         [Category("Others")]
@@ -72,12 +72,12 @@ namespace Tinyfish.FormatOnSave
 
         [Category("Others")]
         [DisplayName("Enable tab to space")]
-        [Description("Enable tab to space on save. Depends on tabs options for the type of file.")]
+        [Description("Enable tab to space. Depends on tabs options for the type of file.")]
         public bool EnableTabToSpace { get; set; } = false;
 
         [Category("UTF8")]
         [DisplayName("Enable force file encoding to UTF8 with BOM")]
-        [Description("Enable force file encoding to UTF8 with BOM on save.")]
+        [Description("Enable force file encoding to UTF8 with BOM.")]
         public bool EnableForceUtf8WithBom { get; set; } = false;
 
         [Category("UTF8")]
