@@ -147,16 +147,10 @@
     <PackageReference Include="Madskristensen.VisualStudio.SDK">
       <Version>14.0.81-pre</Version>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.CommandBars">
-      <Version>8.0.0.1</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools">
-      <Version>16.2.3073</Version>
+      <Version>16.10.1055</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
-      <Version>4.6.0-preview.18571.3</Version>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup>
