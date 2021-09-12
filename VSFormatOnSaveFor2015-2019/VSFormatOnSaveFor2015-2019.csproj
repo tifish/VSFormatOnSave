@@ -60,40 +60,26 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AllowDenyDocumentFilter.cs" />
-    <Compile Include="BinaryFileDetector.cs" />
-    <Compile Include="EnableDisableFormatOnSaveCommand.cs" />
-    <Compile Include="SolutionExplorerContextMenu.cs" />
-    <Compile Include="VsRunningDocTableEventsHandler.cs" />
-    <Compile Include="OptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Guids.cs" />
-    <Compile Include="PkgCmdId.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="FormatOnSavePackage.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="VSPackage.resx">
-      <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="LICENSE">
+    <VSCTCompile Include="..\Resources\VSFormatOnSave.vsct">
+      <Link>VSFormatOnSave.vsct</Link>
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
+    <None Include="..\Resources\Key.snk">
+      <Link>Key.snk</Link>
+    </None>
+    <Content Include="..\Resources\EnableDisableFormatOnSaveCommand.png">
+      <Link>Resources\EnableDisableFormatOnSaveCommand.png</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Resources\LICENSE">
+      <Link>LICENSE</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Resource Include="Resources\EnableDisableFormatOnSaveCommand.png" />
-    <VSCTCompile Include="VSFormatOnSave.vsct">
-      <ResourceName>Menus.ctmenu</ResourceName>
-      <SubType>Designer</SubType>
-    </VSCTCompile>
+    <None Include="..\Resources\README.md">
+      <Link>README.md</Link>
+    </None>
     <None Include="app.config" />
-    <None Include="Key.snk" />
-    <None Include="README.md" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -153,6 +139,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <Import Project="..\VSFormatOnSaveShared\VSFormatOnSaveShared.projitems" Label="Shared" />
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
@@ -160,7 +150,8 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
