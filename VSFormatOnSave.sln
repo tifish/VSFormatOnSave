@@ -7,20 +7,37 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSFormatOnSaveFor2015-2019"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "VSFormatOnSaveShared", "VSFormatOnSaveShared\VSFormatOnSaveShared.shproj", "{64DF0AE5-CC55-43C4-A4F4-EC846C4C549F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSFormatOnSaveFor2022", "VSFormatOnSaveFor2022\VSFormatOnSaveFor2022.csproj", "{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		VSFormatOnSaveShared\VSFormatOnSaveShared.projitems*{011d6cd1-4d51-4d15-a0b2-d8dc5b080f28}*SharedItemsImports = 4
 		VSFormatOnSaveShared\VSFormatOnSaveShared.projitems*{64df0ae5-cc55-43c4-a4f4-ec846c4c549f}*SharedItemsImports = 13
 		VSFormatOnSaveShared\VSFormatOnSaveShared.projitems*{e8402279-0efb-4378-b5ce-c447d7374cc3}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Debug|x86.Build.0 = Debug|Any CPU
 		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Release|x86.ActiveCfg = Release|Any CPU
+		{E8402279-0EFB-4378-B5CE-C447D7374CC3}.Release|x86.Build.0 = Release|Any CPU
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Debug|x86.ActiveCfg = Debug|x86
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Debug|x86.Build.0 = Debug|x86
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Release|x86.ActiveCfg = Release|x86
+		{011D6CD1-4D51-4D15-A0B2-D8DC5B080F28}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
