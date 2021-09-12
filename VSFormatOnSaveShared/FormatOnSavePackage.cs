@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using EnvDTE;
 using EnvDTE80;
+using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -47,7 +48,7 @@ namespace Tinyfish.FormatOnSave
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             Dte = await GetServiceAsync(typeof(SDTE)) as DTE2;
-            _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
+            Assumes.Present(Dte);
 
             var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
@@ -58,6 +59,8 @@ namespace Tinyfish.FormatOnSave
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
+            _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
+           
             _runningDocumentTable = new RunningDocumentTable(this);
             _runningDocumentTable.Advise(plugin);
 
