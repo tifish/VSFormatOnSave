@@ -16,6 +16,14 @@ I found it convenient to unify source code format throughout the develope team. 
 
 ## Updates
 
+### v2.1
+- Supports Visual Studio 2022 Preview. Please download Visual Studio 2022 version from github.
+- Add Enable/Disable button to Tools menu.
+- RemoveAndSort, UnifyLineBreak, TabToSpace, ForceUtf8WithBom are disabled by default.
+- Skip binary files.
+- Optimize option page messages.
+- Remove deprecated RemoveTrailingSpaces.
+
 ### v2.0
 
 - Upgrade to AsyncPackage. Only supports Visual Studio 2015 and above.
