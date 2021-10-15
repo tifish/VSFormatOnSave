@@ -148,7 +148,7 @@ namespace Tinyfish.FormatOnSave
                         TabToSpace(wpfTextView, document.TabSize);
 
                     if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name))
-                        UnifyLineBreak(wpfTextView);
+                        UnifyLineBreak(wpfTextView, OptionsPage.ForceCRLFFilter.IsAllowed(document.Name));
 
                     if (OptionsPage.EnableUnifyEndOfFile && OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(document.Name))
                         UnifyEndOfFile(wpfTextView);
@@ -203,22 +203,27 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void UnifyLineBreak(ITextView wpfTextView)
+        void UnifyLineBreak(ITextView wpfTextView, bool forceCRLF)
         {
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
                 string defaultLineBreak;
-                switch (OptionsPage.LineBreak)
+                if (forceCRLF)
+                    defaultLineBreak = "\r\n";
+                else
                 {
-                    case OptionsPage.LineBreakStyle.Unix:
-                        defaultLineBreak = "\n";
-                        break;
-                    case OptionsPage.LineBreakStyle.Windows:
-                        defaultLineBreak = "\r\n";
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    switch (OptionsPage.LineBreak)
+                    {
+                        case OptionsPage.LineBreakStyle.Unix:
+                            defaultLineBreak = "\n";
+                            break;
+                        case OptionsPage.LineBreakStyle.Windows:
+                            defaultLineBreak = "\r\n";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
                 }
 
                 foreach (var line in snapshot.Lines)
@@ -285,9 +290,8 @@ namespace Tinyfish.FormatOnSave
         {
             try
             {
-                ITextDocument textDocument;
                 wpfTextView.TextDataModel.DocumentBuffer.Properties.TryGetProperty(typeof(ITextDocument),
-                    out textDocument);
+                    out ITextDocument textDocument);
 
                 if (textDocument.Encoding.EncodingName != Encoding.UTF8.EncodingName)
                     textDocument.Encoding = Encoding.UTF8;
