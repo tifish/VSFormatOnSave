@@ -94,7 +94,7 @@ namespace Tinyfish.FormatOnSave
         [Category("End of file")]
         [DisplayName("Enable unify end of file")]
         [Description("Enable unify end of file to one empty line.")]
-        public bool EnableUnifyEndOfFile { get; set; } = true;
+        public bool EnableUnifyEndOfFile { get; set; } = false;
 
         [Category("End of file")]
         [DisplayName("Allowed extensions for UnifyEndOfFile only")]
