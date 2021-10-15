@@ -39,12 +39,18 @@ namespace Tinyfish.FormatOnSave
         SolutionExplorerContextMenu _solutionExplorerContextMenu;
 
         /// <summary>
-        /// Initialization of the package; this method is called right after the package is sited, so this is the place
-        /// where you can put all the initialization code that rely on services provided by VisualStudio.
+        ///     Initialization of the package; this method is called right after the package is sited, so this is the place
+        ///     where you can put all the initialization code that rely on services provided by VisualStudio.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token to monitor for initialization cancellation, which can occur when VS is shutting down.</param>
+        /// <param name="cancellationToken">
+        ///     A cancellation token to monitor for initialization cancellation, which can occur when
+        ///     VS is shutting down.
+        /// </param>
         /// <param name="progress">A provider for progress updates.</param>
-        /// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
+        /// <returns>
+        ///     A task representing the async work of package initialization, or an already completed task if there is none.
+        ///     Do not return null from this method.
+        /// </returns>
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             Dte = await GetServiceAsync(typeof(SDTE)) as DTE2;
@@ -54,13 +60,13 @@ namespace Tinyfish.FormatOnSave
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
 
             var plugin = new VsRunningDocTableEventsHandler(this);
-            
+
             MenuCommandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
-           
+
             _runningDocumentTable = new RunningDocumentTable(this);
             _runningDocumentTable.Advise(plugin);
 
@@ -85,8 +91,10 @@ namespace Tinyfish.FormatOnSave
             var documentPath = documentInfo.Moniker;
 
             foreach (Document doc in Dte.Documents)
+            {
                 if (doc.FullName == documentPath)
                     return doc;
+            }
 
             return null;
         }
@@ -106,7 +114,6 @@ namespace Tinyfish.FormatOnSave
             {
                 var languageOptions = Dte.Properties["TextEditor", document.Language];
                 var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
-                var isFilterAllowed = OptionsPage.AllowDenyFilter.IsAllowed(document.Name);
 
                 var vsTextView = GetIVsTextView(document.FullName);
                 if (vsTextView == null)
@@ -123,33 +130,33 @@ namespace Tinyfish.FormatOnSave
                     vsTextView.SetCaretPos(oldCaretLine, 0);
 
                     // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-                    if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs)
+                    if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs)
                         TabToSpace(wpfTextView, document.TabSize);
 
-                    if (OptionsPage.EnableRemoveAndSort && IsCsFile(document))
+                    if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name) && IsCsFile(document))
+                    {
                         if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
                             RemoveAndSort();
+                    }
 
-                    if (OptionsPage.EnableFormatDocument &&
-                        OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
+                    if (OptionsPage.EnableFormatDocument && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
                         FormatDocument();
 
                     // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-                    if (OptionsPage.EnableTabToSpace && isFilterAllowed && !insertTabs && Dte.Version == "15.0" &&
-                        document.Language == "C/C++")
+                    if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs
+                        && Dte.Version == "15.0" && document.Language == "C/C++")
                         TabToSpace(wpfTextView, document.TabSize);
 
-                    if (OptionsPage.EnableUnifyLineBreak && isFilterAllowed)
+                    if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name))
                         UnifyLineBreak(wpfTextView);
 
-                    if (OptionsPage.EnableUnifyEndOfFile && isFilterAllowed)
+                    if (OptionsPage.EnableUnifyEndOfFile && OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(document.Name))
                         UnifyEndOfFile(wpfTextView);
 
-                    if (OptionsPage.EnableForceUtf8WithBom &&
-                        OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
+                    if (OptionsPage.EnableForceUtf8WithBom && OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
                         ForceUtf8WithBom(wpfTextView);
 
-                    vsTextView.GetCaretPos(out var newCaretLine, out var newCaretColumn);
+                    vsTextView.GetCaretPos(out var newCaretLine, out _);
                     vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
 
                     undo?.Complete();
@@ -235,7 +242,9 @@ namespace Tinyfish.FormatOnSave
             {
                 var lineNumber = snapshot.LineCount - 1;
                 while (lineNumber >= 0 && snapshot.GetLineFromLineNumber(lineNumber).GetText().Trim() == "")
+                {
                     lineNumber--;
+                }
 
                 var hasModified = false;
                 var startEmptyLineNumber = lineNumber + 1;
@@ -257,7 +266,7 @@ namespace Tinyfish.FormatOnSave
                 {
                     // do nothing
                 }
-                // Delete redudent empty lines
+                // Delete redundant empty lines
                 else if (startEmptyLineNumber <= snapshot.LineCount - 1)
                 {
                     var startPosition = snapshot.GetLineFromLineNumber(startEmptyLineNumber).Start.Position;
@@ -369,9 +378,7 @@ namespace Tinyfish.FormatOnSave
                             hasModifed = true;
                         }
                         else if (IsCjkCharacter(currentChar))
-                        {
                             positionOffset++;
-                        }
                     }
                 }
 

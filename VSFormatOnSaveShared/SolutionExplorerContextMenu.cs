@@ -1,10 +1,9 @@
-﻿using EnvDTE;
-using EnvDTE80;
-using Microsoft.VisualStudio.Shell;
-using System;
+﻿using System;
 using System.ComponentModel.Design;
 using System.IO;
-using System.Runtime.InteropServices;
+using EnvDTE;
+using EnvDTE80;
+using Microsoft.VisualStudio.Shell;
 
 namespace Tinyfish.FormatOnSave
 {
@@ -22,7 +21,7 @@ namespace Tinyfish.FormatOnSave
             var menuItem = new MenuCommand(FormatOnSaveInFileEventHandler, menuCommandId)
             {
                 Visible = true,
-                Enabled = true
+                Enabled = true,
             };
             mcs.AddCommand(menuItem);
 
@@ -30,7 +29,7 @@ namespace Tinyfish.FormatOnSave
             menuItem = new MenuCommand(FormatOnSaveInFolderEventHandler, menuCommandId)
             {
                 Visible = true,
-                Enabled = true
+                Enabled = true,
             };
             mcs.AddCommand(menuItem);
 
@@ -38,7 +37,7 @@ namespace Tinyfish.FormatOnSave
             menuItem = new MenuCommand(FormatOnSaveInProjectEventHandler, menuCommandId)
             {
                 Visible = true,
-                Enabled = true
+                Enabled = true,
             };
             mcs.AddCommand(menuItem);
 
@@ -46,7 +45,7 @@ namespace Tinyfish.FormatOnSave
             menuItem = new MenuCommand(FormatOnSaveInProjectEventHandler, menuCommandId)
             {
                 Visible = true,
-                Enabled = true
+                Enabled = true,
             };
             mcs.AddCommand(menuItem);
 
@@ -54,7 +53,7 @@ namespace Tinyfish.FormatOnSave
             menuItem = new MenuCommand(FormatOnSaveInSolutionEventHandler, menuCommandId)
             {
                 Visible = true,
-                Enabled = true
+                Enabled = true,
             };
             mcs.AddCommand(menuItem);
 
@@ -62,7 +61,7 @@ namespace Tinyfish.FormatOnSave
             menuItem = new MenuCommand(FormatOnSaveInSolutionFolderEventHandler, menuCommandId)
             {
                 Visible = true,
-                Enabled = true
+                Enabled = true,
             };
             mcs.AddCommand(menuItem);
         }
@@ -112,44 +111,44 @@ namespace Tinyfish.FormatOnSave
             switch (item)
             {
                 case Solution solution:
+                {
+                    foreach (Project subProject in solution.Projects)
                     {
-                        foreach (Project subProject in solution.Projects)
-                        {
-                            FormatItem(subProject);
-                        }
-
-                        return;
+                        FormatItem(subProject);
                     }
+
+                    return;
+                }
 
                 case Project project:
+                {
+                    if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
                     {
-                        if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
+                        foreach (ProjectItem projectSubItem in project.ProjectItems)
                         {
-                            foreach (ProjectItem projectSubItem in project.ProjectItems)
-                            {
-                                FormatItem(projectSubItem.SubProject);
-                            }
+                            FormatItem(projectSubItem.SubProject);
                         }
-                        else
-                        {
-                            foreach (ProjectItem projectSubItem in project.ProjectItems)
-                            {
-                                FormatItem(projectSubItem);
-                            }
-                        }
-
-                        return;
                     }
+                    else
+                    {
+                        foreach (ProjectItem projectSubItem in project.ProjectItems)
+                        {
+                            FormatItem(projectSubItem);
+                        }
+                    }
+
+                    return;
+                }
 
                 case ProjectItem projectItem when projectItem.ProjectItems != null && projectItem.ProjectItems.Count > 0:
+                {
+                    foreach (ProjectItem subProjectItem in projectItem.ProjectItems)
                     {
-                        foreach (ProjectItem subProjectItem in projectItem.ProjectItems)
-                        {
-                            FormatItem(subProjectItem);
-                        }
-
-                        break;
+                        FormatItem(subProjectItem);
                     }
+
+                    break;
+                }
 
                 case ProjectItem projectItem:
                     FormatProjectItem(projectItem);
@@ -160,7 +159,13 @@ namespace Tinyfish.FormatOnSave
         void FormatProjectItem(ProjectItem item)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            if (!_package.OptionsPage.AllowDenyFilter.IsAllowed(item.Name))
+            if (!(_package.OptionsPage.EnableRemoveAndSort && _package.OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(item.Name)
+                  || _package.OptionsPage.EnableFormatDocument && _package.OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(item.Name)
+                  || _package.OptionsPage.EnableUnifyLineBreak && _package.OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(item.Name)
+                  || _package.OptionsPage.EnableUnifyEndOfFile && _package.OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(item.Name)
+                  || _package.OptionsPage.EnableTabToSpace && _package.OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(item.Name)
+                  || _package.OptionsPage.EnableForceUtf8WithBom && _package.OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(item.Name))
+            )
                 return;
 
             Window documentWindow = null;
