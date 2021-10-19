@@ -143,9 +143,10 @@ namespace Tinyfish.FormatOnSave
                         FormatDocument();
 
                     // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-                    if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs
-                        && Dte.Version == "15.0" && document.Language == "C/C++")
-                        TabToSpace(wpfTextView, document.TabSize);
+                    // At 2021.10 the bug has gone. But VS seems to stick to space now, new bug?
+                    //if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs
+                    //    && Dte.Version == "15.0" && document.Language == "C/C++")
+                    //    TabToSpace(wpfTextView, document.TabSize);
 
                     if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name))
                         UnifyLineBreak(wpfTextView, OptionsPage.ForceCRLFFilter.IsAllowed(document.Name));
