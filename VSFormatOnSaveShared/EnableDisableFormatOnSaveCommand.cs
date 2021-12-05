@@ -27,7 +27,7 @@ namespace Tinyfish.FormatOnSave
         ///     VS Package that provides this command, not null.
         /// </summary>
         readonly FormatOnSavePackage package;
-        
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="EnableDisableFormatOnSaveCommand" /> class.
         ///     Adds our command handlers for menu (commands must exist in the command table file)
@@ -40,10 +40,8 @@ namespace Tinyfish.FormatOnSave
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
             var menuCommandID = new CommandID(CommandSet, CommandId);
-            var menuItem = new MenuCommand(Execute, menuCommandID)
-            {
-                Checked = package.OptionsPage.Enabled
-            };
+            var menuItem = new OleMenuCommand(Execute, menuCommandID);
+            menuItem.BeforeQueryStatus += OnBeforeQueryStatus;
             commandService.AddCommand(menuItem);
         }
 
@@ -83,8 +81,17 @@ namespace Tinyfish.FormatOnSave
             ThreadHelper.ThrowIfNotOnUIThread();
 
             package.OptionsPage.Enabled = !package.OptionsPage.Enabled;
-            package.OptionsPage.SaveSettingsToStorage(); 
-            ((MenuCommand) sender).Checked = package.OptionsPage.Enabled;
+            package.OptionsPage.SaveSettingsToStorage();
+        }
+
+        private void OnBeforeQueryStatus(object sender, EventArgs e)
+        {
+            var command = sender as OleMenuCommand;
+            if (command == null)
+                return;
+
+            command.Checked = package.OptionsPage.Enabled;
+            command.Text = package.OptionsPage.Enabled ? "Disable Format on Save" : "Enable Format on Save";
         }
     }
 }

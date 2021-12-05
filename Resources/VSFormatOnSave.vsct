@@ -104,6 +104,7 @@
       <Button guid="guidFormatOnSavePackageCmdSet" id="cmdidEnableDisableFormatOnSaveCommand" priority="0x0100" type="Button">
         <Parent guid="guidFormatOnSavePackageCmdSet" id="ToolsMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
+		  <CommandFlag>TextChanges</CommandFlag>
         <Strings>
           <ButtonText>Enable Format on Save</ButtonText>
         </Strings>
