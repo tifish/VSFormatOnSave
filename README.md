@@ -4,19 +4,30 @@ Automatically format document on save. Current release includes:
 - SmartRemoveAndSort: Apply remove and sort to .cs without #if.
 - FormatDocument: Same as Edit > Advance > Format Document
 - UnifyLineBreak: Enforce line break to CRLF or LF.
-- UnifyEndOfFile: Enforce only one line return at the end of file.
+- UnifyEndOfFile: Enforce only one line break at the end of file.
 - TabToSpace: Convert tab to space.
 - ForceUtf8WithBom: Force file encoding to UTF8 with BOM.
-- RemoveTrailingSpaces: Remove trailing spaces. It is mostly for Visual Sutdio 2012, which won't remove trailing spaces when formatting.
+- RemoveTrailingSpaces: Remove trailing spaces. It is mostly for Visual Studio 2012 and below, which won't remove trailing spaces when formatting.
 - File extension filters.
 - Batch formatting in solution explorer.
 - Settings in Tools -> Options -> Format on Save.
 
-I found it convenient to unify source code format throughout the develope team. If you have any suggestion, feel free to tell me.
+I found it convenient to unify source code format throughout the develop team. If you have any suggestion, feel free to tell me.
 
 ## Updates
 
+### v2.2
+
+- Add individual filter for every feature.
+- Force CRLF for .aspx files, or Visual Studio formatting will produce weird empty lines.
+- UnifyEndOfFile is disabled by default.
+- Remove VS2017 tab to space bug fix, since the bug has gone in the latest version.
+- Add support for SpecFlow .feature files. #12
+- Show "Enable/Disable format on save" on menu item to avoid misleading.
+- Upload VS2022 version to the marketplace.
+
 ### v2.1
+
 - Supports Visual Studio 2022 Preview. Please download Visual Studio 2022 version from github.
 - Add Enable/Disable button to Tools menu.
 - RemoveAndSort, UnifyLineBreak, TabToSpace, ForceUtf8WithBom are disabled by default.
@@ -36,4 +47,4 @@ I found it convenient to unify source code format throughout the develope team. 
 ### v1.11
 
 - Add SmartRemoveAndSort: Apply remove and sort to .cs without #if.
-- Add RemoveTrailingSpaces: Remove trailing spaces. It is mostly for Visual Sutdio 2012, which won't remove trailing spaces when formatting.
+- Add RemoveTrailingSpaces: Remove trailing spaces. It is mostly for Visual Studio 2012, which won't remove trailing spaces when formatting.
