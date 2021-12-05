@@ -103,8 +103,7 @@ namespace Tinyfish.FormatOnSave
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            if (document == null || document.Type != "Text" || document.Language == null ||
-                document.Language == "Plain Text")
+            if (document == null || document.Type != "Text" || document.Language == null)
                 return false;
 
             var oldActiveDocument = Dte.ActiveDocument;
@@ -112,8 +111,12 @@ namespace Tinyfish.FormatOnSave
 
             try
             {
-                var languageOptions = Dte.Properties["TextEditor", document.Language];
-                var insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
+                var insertTabs = true;
+                if (document.Language != "Plain Text") // .feature file is "Plain Text", cannot be ignore
+                {
+                    var languageOptions = Dte.Properties["TextEditor", document.Language];
+                    insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
+                }
 
                 var vsTextView = GetIVsTextView(document.FullName);
                 if (vsTextView == null)
@@ -201,6 +204,8 @@ namespace Tinyfish.FormatOnSave
             }
             catch (COMException)
             {
+                // For document.Language == "Plain Text", this always raise an exception.
+                // For .feature file of SpecFlow, if nothing to format, exception will be raised.
             }
         }
 
