@@ -14,6 +14,11 @@ Automatically format document on save. Current release includes:
 
 I found it convenient to unify source code format throughout the develop team. If you have any suggestion, feel free to tell me.
 
+Two versions:
+
+- [For VS2015-2019](https://marketplace.visualstudio.com/items?itemName=WinstonFeng.FormatonSave)
+- [For VS2022](https://marketplace.visualstudio.com/items?itemName=WinstonFeng.VSFormatOnSave2022)
+
 ## Updates
 
 ### v2.2
@@ -24,7 +29,7 @@ I found it convenient to unify source code format throughout the develop team. I
 - Remove VS2017 tab to space bug fix, since the bug has gone in the latest version.
 - Add support for SpecFlow .feature files. #12
 - Show "Enable/Disable format on save" on menu item to avoid misleading.
-- Upload VS2022 version to the marketplace.
+- Upload VS2022 version to the marketplace. Removed the github version.
 
 ### v2.1
 
