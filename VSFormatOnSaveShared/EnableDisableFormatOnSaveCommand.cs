@@ -1,9 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using System.Globalization;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using IAsyncServiceProvider = Microsoft.VisualStudio.Shell.IAsyncServiceProvider;
 using Task = System.Threading.Tasks.Task;
 
 namespace Tinyfish.FormatOnSave
@@ -26,7 +24,7 @@ namespace Tinyfish.FormatOnSave
         /// <summary>
         ///     VS Package that provides this command, not null.
         /// </summary>
-        readonly FormatOnSavePackage package;
+        private readonly FormatOnSavePackage package;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="EnableDisableFormatOnSaveCommand" /> class.
@@ -34,7 +32,7 @@ namespace Tinyfish.FormatOnSave
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
         /// <param name="commandService">Command service to add command to, not null.</param>
-        EnableDisableFormatOnSaveCommand(FormatOnSavePackage package, OleMenuCommandService commandService)
+        private EnableDisableFormatOnSaveCommand(FormatOnSavePackage package, OleMenuCommandService commandService)
         {
             this.package = package ?? throw new ArgumentNullException(nameof(package));
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
@@ -53,7 +51,7 @@ namespace Tinyfish.FormatOnSave
         /// <summary>
         ///     Gets the service provider from the owner package.
         /// </summary>
-        IAsyncServiceProvider ServiceProvider => package;
+        private IAsyncServiceProvider ServiceProvider => package;
 
         /// <summary>
         ///     Initializes the singleton instance of the command.
@@ -76,12 +74,18 @@ namespace Tinyfish.FormatOnSave
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        void Execute(object sender, EventArgs e)
+        private void Execute(object sender, EventArgs e)
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
+            var command = sender as OleMenuCommand;
+            if (command == null)
+                return;
+            // User click menu command before extension loading.
+            if (command.Text == "")
+                return;
+            
             package.OptionsPage.Enabled = !package.OptionsPage.Enabled;
             package.OptionsPage.SaveSettingsToStorage();
+            package.OptionsPage.UpdateSettings();
         }
 
         private void OnBeforeQueryStatus(object sender, EventArgs e)

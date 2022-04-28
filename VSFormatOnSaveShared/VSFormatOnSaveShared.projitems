@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)EnableDisableFormatOnSaveCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FormatOnSavePackage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Guids.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WindowHook.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)OptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>

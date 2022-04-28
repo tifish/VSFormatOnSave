@@ -10,9 +10,10 @@ namespace Tinyfish.FormatOnSave
     public class OptionsPage : DialogPage
     {
         [Category("All")]
-        [DisplayName("Enable FormatOnSave plugin")]
-        [Description("Enable FormatOnSave plugin.")]
+        [DisplayName("Enable FormatOnSave")]
+        [Description("Enable all FormatOnSave features.")]
         public bool Enabled { get; set; } = true;
+
 
         public enum LineBreakStyle
         {
@@ -59,6 +60,13 @@ namespace Tinyfish.FormatOnSave
         public string DenyFormatDocumentExtentions { get; set; } = string.Empty;
 
         public AllowDenyDocumentFilter AllowDenyFormatDocumentFilter;
+
+        [Category("Format document")]
+        [DisplayName("Extensions cause delayed FormatDocument")]
+        [Description("Extensions cause delayed FormatDocument, which modify file after saving. Space separated list. For example: .razor .cshtml")]
+        public string DelayedFormatDocumentExtentions { get; set; } = ".razor .cshtml";
+
+        public AllowDenyDocumentFilter DelayedFormatDocumentFilter;
 
 
         [Category("Line break")]
@@ -158,14 +166,17 @@ namespace Tinyfish.FormatOnSave
 
         public AllowDenyDocumentFilter AllowDenyForceUtf8WithBomFilter;
 
+        public event EventHandler OnSettingsUpdated;
 
-        void UpdateSettings()
+        public void UpdateSettings()
         {
             AllowDenyRemoveAndSortFilter = new AllowDenyDocumentFilter(
                 AllowRemoveAndSortExtensions.Split(' '), DenyRemoveAndSortExtensions.Split(' '));
 
             AllowDenyFormatDocumentFilter = new AllowDenyDocumentFilter(
                 AllowFormatDocumentExtentions.Split(' '), DenyFormatDocumentExtentions.Split(' '));
+
+            DelayedFormatDocumentFilter = new AllowDenyDocumentFilter(DelayedFormatDocumentExtentions.Split(' '), null);
 
             AllowDenyUnifyLineBreakFilter = new AllowDenyDocumentFilter(
                 AllowUnifyLineBreakExtensions.Split(' '), DenyUnifyLineBreakExtensions.Split(' '));
@@ -182,17 +193,21 @@ namespace Tinyfish.FormatOnSave
 
             AllowDenyForceUtf8WithBomFilter = new AllowDenyDocumentFilter(
                 AllowForceUtf8WithBomExtentions.Split(' '), DenyForceUtf8WithBomExtentions.Split(' '));
+
+            OnSettingsUpdated?.Invoke(this, null);
         }
 
         protected override void OnApply(PageApplyEventArgs e)
         {
             base.OnApply(e);
+
             UpdateSettings();
         }
 
         public override void LoadSettingsFromStorage()
         {
             base.LoadSettingsFromStorage();
+
             UpdateSettings();
         }
     }

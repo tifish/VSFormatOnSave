@@ -8,6 +8,9 @@ Automatically format document on save. Current release includes:
 - TabToSpace: Convert tab to space.
 - ForceUtf8WithBom: Force file encoding to UTF8 with BOM.
 - RemoveTrailingSpaces: Remove trailing spaces. It is mostly for Visual Studio 2012 and below, which won't remove trailing spaces when formatting.
+
+And more:
+
 - File extension filters.
 - Batch formatting in solution explorer.
 - Settings in Tools -> Options -> Format on Save.
@@ -20,6 +23,11 @@ Two versions:
 - [For VS2022](https://marketplace.visualstudio.com/items?itemName=WinstonFeng.VSFormatOnSave2022)
 
 ## Updates
+
+### v2.3
+
+- Fix naming inconsistency. #15
+- In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving. I try to capture the modification and save again.
 
 ### v2.2
 

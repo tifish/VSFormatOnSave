@@ -106,7 +106,7 @@
         <Icon guid="guidImages" id="bmpPic1" />
 		  <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <ButtonText>Enable Format on Save</ButtonText>
+          <ButtonText>Format on Save is not loaded</ButtonText>
         </Strings>
       </Button>
     </Buttons>

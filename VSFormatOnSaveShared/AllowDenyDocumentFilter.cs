@@ -8,7 +8,7 @@ namespace Tinyfish.FormatOnSave
 {
     public class AllowDenyDocumentFilter
     {
-        readonly Func<string, bool> _isAllowed = fileName => true;
+        private readonly Func<string, bool> _isAllowed = fileName => true;
 
         public AllowDenyDocumentFilter(string[] allowedExtensions, string[] deniedExtensions)
         {

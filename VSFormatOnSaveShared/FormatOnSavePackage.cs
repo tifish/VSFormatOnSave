@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel.Design;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Forms;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft;
@@ -17,60 +19,63 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using DefGuidList = Microsoft.VisualStudio.Editor.DefGuidList;
 using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+#if true
 using Task = System.Threading.Tasks.Task;
+#endif
 
 namespace Tinyfish.FormatOnSave
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
-    [ProvideAutoLoad("{f1536ef8-92ec-443c-9ed7-fdadf150da82}",
-        PackageAutoLoadFlags.BackgroundLoad)] //To set the UI context to autoload a VSPackage
+    [ProvideAutoLoad("{f1536ef8-92ec-443c-9ed7-fdadf150da82}", PackageAutoLoadFlags.BackgroundLoad)]
     [Guid(GuidList.GuidFormatOnSavePkgString)]
     [ProvideOptionPage(typeof(OptionsPage), "Format on Save", "Settings", 0, 0, true)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     public class FormatOnSavePackage : AsyncPackage
     {
-        public DTE2 Dte;
-        public OptionsPage OptionsPage;
-        RunningDocumentTable _runningDocumentTable;
-        ServiceProvider _serviceProvider;
-        ITextUndoHistoryRegistry _undoHistoryRegistry;
-        public OleMenuCommandService MenuCommandService;
-        SolutionExplorerContextMenu _solutionExplorerContextMenu;
+        public DTE2 Dte { get; private set; }
+        public OptionsPage OptionsPage { get; private set; }
+        private RunningDocumentTable _runningDocumentTable;
+        private ServiceProvider _serviceProvider;
+        private ITextUndoHistoryRegistry _undoHistoryRegistry;
+        public OleMenuCommandService MenuCommandService { get; private set; }
+        private SolutionExplorerContextMenu _solutionExplorerContextMenu;
+        public int MajorVersion { get; private set; }
+        public int MinorVersion { get; private set; }
+        private Events2 _dteEvents;
 
-        /// <summary>
-        ///     Initialization of the package; this method is called right after the package is sited, so this is the place
-        ///     where you can put all the initialization code that rely on services provided by VisualStudio.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///     A cancellation token to monitor for initialization cancellation, which can occur when
-        ///     VS is shutting down.
-        /// </param>
-        /// <param name="progress">A provider for progress updates.</param>
-        /// <returns>
-        ///     A task representing the async work of package initialization, or an already completed task if there is none.
-        ///     Do not return null from this method.
-        /// </returns>
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             Dte = await GetServiceAsync(typeof(SDTE)) as DTE2;
             Assumes.Present(Dte);
 
+            _dteEvents = (Events2)Dte.Events;
+
+            var versionItems = Dte.Version.Split('.');
+            if (versionItems.Length == 2)
+            {
+                MajorVersion = int.Parse(versionItems[0]);
+                MinorVersion = int.Parse(versionItems[1]);
+            }
+
             var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
             _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
 
-            var plugin = new VsRunningDocTableEventsHandler(this);
+            var docTableEventHandler = new VsRunningDocTableEventsHandler(this);
 
             MenuCommandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
 
+            // When Initialised asynchronously, the current thread may be a background thread at this point.
+            // Do any Initialisation that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
+            OptionsPage.OnSettingsUpdated += OnSettingsUpdated;
 
             _serviceProvider = new ServiceProvider((IServiceProvider)Dte);
 
             _runningDocumentTable = new RunningDocumentTable(this);
-            _runningDocumentTable.Advise(plugin);
-
-            OptionsPage = (OptionsPage)GetDialogPage(typeof(OptionsPage));
+            _runningDocumentTable.Advise(docTableEventHandler);
 
             _solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
 
@@ -80,24 +85,28 @@ namespace Tinyfish.FormatOnSave
         public void Format(uint docCookie)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (_isSavingWithoutFormatting)
+                return;
+
             var document = FindDocument(docCookie);
             Format(document);
         }
 
-        Document FindDocument(uint docCookie)
+        private Document FindDocument(uint docCookie)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             var documentInfo = _runningDocumentTable.GetDocumentInfo(docCookie);
             var documentPath = documentInfo.Moniker;
 
             foreach (Document doc in Dte.Documents)
-            {
                 if (doc.FullName == documentPath)
                     return doc;
-            }
 
             return null;
         }
+
+        private bool _isFormatting;
 
         public bool Format(Document document)
         {
@@ -106,8 +115,18 @@ namespace Tinyfish.FormatOnSave
             if (document == null || document.Type != "Text" || document.Language == null)
                 return false;
 
-            var oldActiveDocument = Dte.ActiveDocument;
-            document.Activate();
+            // Edit.FormatDocument command only apply to the active document.
+            Document oldActiveDocument = null;
+            if (OptionsPage.EnableFormatDocument && document != Dte.ActiveDocument)
+            {
+                oldActiveDocument = Dte.ActiveDocument;
+                document.Activate();
+            }
+
+            // Document.Language is unreliable, e.g. "HTMLX" in VS2019 but "Razor" in VS2022. Fallback to extension.
+            var ext = Path.GetExtension(document.FullName).ToLower();
+
+            _isFormatting = true;
 
             try
             {
@@ -133,17 +152,17 @@ namespace Tinyfish.FormatOnSave
                     vsTextView.SetCaretPos(oldCaretLine, 0);
 
                     // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-                    if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs)
+                    if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name)
+                        && !insertTabs)
                         TabToSpace(wpfTextView, document.TabSize);
 
-                    if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name) && IsCsFile(document))
-                    {
+                    if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name)
+                        && ext == ".cs")
                         if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
                             RemoveAndSort();
-                    }
 
                     if (OptionsPage.EnableFormatDocument && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
-                        FormatDocument();
+                        FormatDocument(ext);
 
                     // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
                     // At 2021.10 the bug has gone. But VS seems to stick to space now, new bug?
@@ -169,23 +188,18 @@ namespace Tinyfish.FormatOnSave
             finally
             {
                 oldActiveDocument?.Activate();
+                _isFormatting = false;
             }
 
             return true;
         }
 
-        static bool IsCsFile(Document document)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            return document.FullName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
-        }
-
-        static bool HasIfCompilerDirective(ITextView wpfTextView)
+        private static bool HasIfCompilerDirective(ITextView wpfTextView)
         {
             return wpfTextView.TextSnapshot.GetText().Contains("#if");
         }
 
-        void RemoveAndSort()
+        private void RemoveAndSort()
         {
             try
             {
@@ -196,11 +210,135 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void FormatDocument()
+        #region Capture delayed Edit.FormatDocument command
+
+        private void OnSettingsUpdated(object sender, EventArgs e)
+        {
+            UpdateCaptureEvents();
+        }
+
+        private TextEditorEvents _textEditorEvents;
+        private WindowKeyboardHook _keyboardHook;
+
+        private void UpdateCaptureEvents()
+        {
+            if (MajorVersion < 17)
+                return;
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (OptionsPage.Enabled && OptionsPage.EnableFormatDocument)
+            {
+                if (_textEditorEvents == null)
+                {
+                    _textEditorEvents = _dteEvents.TextEditorEvents;
+                    _textEditorEvents.LineChanged += OnLineChanged;
+                }
+
+                if (_keyboardHook == null)
+                {
+                    _keyboardHook = new WindowKeyboardHook();
+                    _keyboardHook.OnMessage += OnKeyboardMessage;
+                    _keyboardHook.Install();
+                }
+            }
+            else
+            {
+                if (_textEditorEvents != null)
+                {
+                    _textEditorEvents.LineChanged -= OnLineChanged;
+                    _textEditorEvents = null;
+                }
+
+                if (_keyboardHook != null)
+                {
+                    _keyboardHook.Uninstall();
+                    _keyboardHook = null;
+                }
+            }
+        }
+
+        private bool _isSavingWithoutFormatting;
+
+        private void OnLineChanged(TextPoint startPoint, TextPoint endPoint, int hint)
+        {
+            if (!_isWaitingForDelayedFormatDocumentCommand)
+                return;
+            if (_isFormatting)
+                return;
+
+            // No user typing, but document changed, should be changed by delayed Edit.FormatDocument command.
+
+            // Edit.FormatDocument may trigger multiple modification. Capture the last one.
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (startPoint.AbsoluteCharOffset != endPoint.AbsoluteCharOffset)
+                return;
+
+            _isWaitingForDelayedFormatDocumentCommand = false;
+
+            // Only process the triggered document
+            if (Dte.ActiveDocument == _delayedFormattingDocument)
+            {
+                // Save without formatting
+                _isSavingWithoutFormatting = true;
+                try
+                {
+                    Dte.ExecuteCommand("File.SaveSelectedItems");
+                }
+                finally
+                {
+                    _isSavingWithoutFormatting = false;
+                }
+            }
+
+            _delayedFormattingDocument = null;
+        }
+
+        private readonly Keys[] _bypassKeys =
+        {
+            Keys.Up, Keys.Down, Keys.Left, Keys.Right,
+            Keys.Home, Keys.End, Keys.PageUp, Keys.PageDown,
+            Keys.Escape, Keys.CapsLock,
+            Keys.ControlKey, Keys.ShiftKey, Keys.Alt,
+            Keys.F1, Keys.F2, Keys.F3, Keys.F4, Keys.F5, Keys.F6, Keys.F7, Keys.F8, Keys.F9, Keys.F10, Keys.F11, Keys.F12,
+        };
+
+        private void OnKeyboardMessage(Keys key, bool isPressing)
+        {
+            // Any user modification will stop waiting for delayed Edit.FormatDocument command.
+            // It is not 100% accurrate.
+            if (!_isWaitingForDelayedFormatDocumentCommand)
+                return;
+            if (!isPressing)
+                return;
+            if (_bypassKeys.Contains(key))
+                return;
+
+            _isWaitingForDelayedFormatDocumentCommand = false;
+            _delayedFormattingDocument = null;
+        }
+
+        private bool _isWaitingForDelayedFormatDocumentCommand;
+        private Document _delayedFormattingDocument;
+
+        #endregion
+
+        private void FormatDocument(string ext)
         {
             try
             {
                 Dte.ExecuteCommand("Edit.FormatDocument", string.Empty);
+
+                // In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving.
+                // I try to capture the modification and save again.
+                if (MajorVersion >= 17
+                    && OptionsPage.DelayedFormatDocumentFilter.IsAllowed(ext))
+                {
+                    UpdateCaptureEvents();
+
+                    _isWaitingForDelayedFormatDocumentCommand = true;
+                    _delayedFormattingDocument = Dte.ActiveDocument;
+                }
             }
             catch (COMException)
             {
@@ -209,7 +347,7 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void UnifyLineBreak(ITextView wpfTextView, bool forceCRLF)
+        private void UnifyLineBreak(ITextView wpfTextView, bool forceCRLF)
         {
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
@@ -218,7 +356,6 @@ namespace Tinyfish.FormatOnSave
                 if (forceCRLF)
                     defaultLineBreak = "\r\n";
                 else
-                {
                     switch (OptionsPage.LineBreak)
                     {
                         case OptionsPage.LineBreakStyle.Unix:
@@ -230,7 +367,6 @@ namespace Tinyfish.FormatOnSave
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-                }
 
                 foreach (var line in snapshot.Lines)
                 {
@@ -246,16 +382,14 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        static void UnifyEndOfFile(ITextView textView)
+        private static void UnifyEndOfFile(ITextView textView)
         {
             var snapshot = textView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
             {
                 var lineNumber = snapshot.LineCount - 1;
                 while (lineNumber >= 0 && snapshot.GetLineFromLineNumber(lineNumber).GetText().Trim() == "")
-                {
                     lineNumber--;
-                }
 
                 var hasModified = false;
                 var startEmptyLineNumber = lineNumber + 1;
@@ -292,7 +426,7 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        static void ForceUtf8WithBom(ITextView wpfTextView)
+        private static void ForceUtf8WithBom(ITextView wpfTextView)
         {
             try
             {
@@ -304,10 +438,11 @@ namespace Tinyfish.FormatOnSave
             }
             catch (Exception)
             {
+                // ignored
             }
         }
 
-        static void RemoveTrailingSpaces(ITextView textView)
+        private static void RemoveTrailingSpaces(ITextView textView)
         {
             var snapshot = textView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
@@ -334,9 +469,9 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        class SpaceStringPool
+        private class SpaceStringPool
         {
-            readonly string[] _stringCache = new string[8];
+            private readonly string[] _stringCache = new string[8];
 
             public string GetString(int spaceCount)
             {
@@ -357,9 +492,9 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
+        private readonly SpaceStringPool _spaceStringPool = new SpaceStringPool();
 
-        void TabToSpace(ITextView wpfTextView, int tabSize)
+        private void TabToSpace(ITextView wpfTextView, int tabSize)
         {
             var snapshot = wpfTextView.TextSnapshot;
             using (var edit = snapshot.TextBuffer.CreateEdit())
@@ -388,7 +523,9 @@ namespace Tinyfish.FormatOnSave
                             hasModifed = true;
                         }
                         else if (IsCjkCharacter(currentChar))
+                        {
                             positionOffset++;
+                        }
                     }
                 }
 
@@ -397,7 +534,7 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        readonly Regex _cjkRegex = new Regex(
+        private readonly Regex _cjkRegex = new Regex(
             @"\p{IsHangulJamo}|" +
             @"\p{IsCJKRadicalsSupplement}|" +
             @"\p{IsCJKSymbolsandPunctuation}|" +
@@ -409,12 +546,12 @@ namespace Tinyfish.FormatOnSave
             @"\p{IsCJKCompatibilityForms}|" +
             @"\p{IsHalfwidthandFullwidthForms}");
 
-        bool IsCjkCharacter(char character)
+        private bool IsCjkCharacter(char character)
         {
             return _cjkRegex.IsMatch(character.ToString());
         }
 
-        static IWpfTextView GetWpfTextView(IVsTextView vTextView)
+        private static IWpfTextView GetWpfTextView(IVsTextView vTextView)
         {
             IWpfTextView view = null;
             var userData = (IVsUserData)vTextView;
@@ -430,7 +567,7 @@ namespace Tinyfish.FormatOnSave
             return view;
         }
 
-        IVsTextView GetIVsTextView(string filePath)
+        private IVsTextView GetIVsTextView(string filePath)
         {
             return VsShellUtilities.IsDocumentOpen(_serviceProvider, filePath, Guid.Empty, out var uiHierarchy,
                 out var itemId, out var windowFrame)
@@ -438,8 +575,8 @@ namespace Tinyfish.FormatOnSave
                 : null;
         }
 
-        IVsOutputWindowPane _outputWindowPane;
-        Guid _outputWindowPaneGuid = new Guid("8AEEC946-659A-4D14-8340-730B2A0FF39C");
+        private IVsOutputWindowPane _outputWindowPane;
+        private Guid _outputWindowPaneGuid = new Guid("8AEEC946-659A-4D14-8340-730B2A0FF39C");
 
         public void OutputString(string message)
         {

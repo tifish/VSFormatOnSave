@@ -9,7 +9,7 @@ namespace Tinyfish.FormatOnSave
 {
     class SolutionExplorerContextMenu
     {
-        readonly FormatOnSavePackage _package;
+        private readonly FormatOnSavePackage _package;
 
         public SolutionExplorerContextMenu(FormatOnSavePackage package)
         {
@@ -17,7 +17,7 @@ namespace Tinyfish.FormatOnSave
 
             var mcs = _package.MenuCommandService;
 
-            var menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFile, (int)PkgCmdIdList.CmdIdFormatOnSaveFile);
+            var menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFile, (int) PkgCmdIdList.CmdIdFormatOnSaveFile);
             var menuItem = new MenuCommand(FormatOnSaveInFileEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -25,7 +25,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFolder, (int)PkgCmdIdList.CmdIdFormatOnSaveFolder);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetFolder, (int) PkgCmdIdList.CmdIdFormatOnSaveFolder);
             menuItem = new MenuCommand(FormatOnSaveInFolderEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -33,7 +33,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetProject, (int)PkgCmdIdList.CmdIdFormatOnSaveProject);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetProject, (int) PkgCmdIdList.CmdIdFormatOnSaveProject);
             menuItem = new MenuCommand(FormatOnSaveInProjectEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -41,7 +41,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetMultipleItems, (int)PkgCmdIdList.CmdIdFormatOnSaveMultipleItems);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetMultipleItems, (int) PkgCmdIdList.CmdIdFormatOnSaveMultipleItems);
             menuItem = new MenuCommand(FormatOnSaveInProjectEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -49,7 +49,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolution, (int)PkgCmdIdList.CmdIdFormatOnSaveSolution);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolution, (int) PkgCmdIdList.CmdIdFormatOnSaveSolution);
             menuItem = new MenuCommand(FormatOnSaveInSolutionEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -57,7 +57,7 @@ namespace Tinyfish.FormatOnSave
             };
             mcs.AddCommand(menuItem);
 
-            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolutionFolder, (int)PkgCmdIdList.CmdIdFormatOnSaveSolutionFolder);
+            menuCommandId = new CommandID(GuidList.GuidFormatOnSaveCmdSetSolutionFolder, (int) PkgCmdIdList.CmdIdFormatOnSaveSolutionFolder);
             menuItem = new MenuCommand(FormatOnSaveInSolutionFolderEventHandler, menuCommandId)
             {
                 Visible = true,
@@ -66,46 +66,44 @@ namespace Tinyfish.FormatOnSave
             mcs.AddCommand(menuItem);
         }
 
-        void FormatOnSaveInFileEventHandler(object sender, EventArgs e)
+        private void FormatOnSaveInFileEventHandler(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
-        void FormatOnSaveInFolderEventHandler(object sender, EventArgs e)
+        private void FormatOnSaveInFolderEventHandler(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
-        void FormatOnSaveInProjectEventHandler(object sender, EventArgs e)
+        private void FormatOnSaveInProjectEventHandler(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
-        void FormatOnSaveInSolutionEventHandler(object sender, EventArgs e)
+        private void FormatOnSaveInSolutionEventHandler(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
-        void FormatOnSaveInSolutionFolderEventHandler(object sender, EventArgs e)
+        private void FormatOnSaveInSolutionFolderEventHandler(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             FormatSelectedItems();
         }
 
-        void FormatSelectedItems()
+        private void FormatSelectedItems()
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            foreach (UIHierarchyItem selectedItem in (object[])_package.Dte.ToolWindows.SolutionExplorer.SelectedItems)
-            {
+            foreach (UIHierarchyItem selectedItem in (object[]) _package.Dte.ToolWindows.SolutionExplorer.SelectedItems)
                 FormatItem(selectedItem.Object);
-            }
         }
 
-        void FormatItem(object item)
+        private void FormatItem(object item)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             switch (item)
@@ -113,9 +111,7 @@ namespace Tinyfish.FormatOnSave
                 case Solution solution:
                 {
                     foreach (Project subProject in solution.Projects)
-                    {
                         FormatItem(subProject);
-                    }
 
                     return;
                 }
@@ -123,19 +119,11 @@ namespace Tinyfish.FormatOnSave
                 case Project project:
                 {
                     if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
-                    {
                         foreach (ProjectItem projectSubItem in project.ProjectItems)
-                        {
                             FormatItem(projectSubItem.SubProject);
-                        }
-                    }
                     else
-                    {
                         foreach (ProjectItem projectSubItem in project.ProjectItems)
-                        {
                             FormatItem(projectSubItem);
-                        }
-                    }
 
                     return;
                 }
@@ -143,9 +131,7 @@ namespace Tinyfish.FormatOnSave
                 case ProjectItem projectItem when projectItem.ProjectItems != null && projectItem.ProjectItems.Count > 0:
                 {
                     foreach (ProjectItem subProjectItem in projectItem.ProjectItems)
-                    {
                         FormatItem(subProjectItem);
-                    }
 
                     break;
                 }
@@ -156,16 +142,16 @@ namespace Tinyfish.FormatOnSave
             }
         }
 
-        void FormatProjectItem(ProjectItem item)
+        private void FormatProjectItem(ProjectItem item)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            if (!(_package.OptionsPage.EnableRemoveAndSort && _package.OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(item.Name)
-                  || _package.OptionsPage.EnableFormatDocument && _package.OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(item.Name)
-                  || _package.OptionsPage.EnableUnifyLineBreak && _package.OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(item.Name)
-                  || _package.OptionsPage.EnableUnifyEndOfFile && _package.OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(item.Name)
-                  || _package.OptionsPage.EnableTabToSpace && _package.OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(item.Name)
-                  || _package.OptionsPage.EnableForceUtf8WithBom && _package.OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(item.Name))
-            )
+            if (!((_package.OptionsPage.EnableRemoveAndSort && _package.OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(item.Name))
+                  || (_package.OptionsPage.EnableFormatDocument && _package.OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(item.Name))
+                  || (_package.OptionsPage.EnableUnifyLineBreak && _package.OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(item.Name))
+                  || (_package.OptionsPage.EnableUnifyEndOfFile && _package.OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(item.Name))
+                  || (_package.OptionsPage.EnableTabToSpace && _package.OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(item.Name))
+                  || (_package.OptionsPage.EnableForceUtf8WithBom && _package.OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(item.Name)))
+               )
                 return;
 
             Window documentWindow = null;

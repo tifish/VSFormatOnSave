@@ -1,9 +1,9 @@
 ﻿#region
 
+using System.ComponentModel.Composition;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.ComponentModel.Composition;
 
 #endregion
 
@@ -12,7 +12,7 @@ namespace Tinyfish.FormatOnSave
     [Export(typeof(IVsRunningDocTableEvents3))]
     class VsRunningDocTableEventsHandler : IVsRunningDocTableEvents3
     {
-        readonly FormatOnSavePackage _package;
+        private readonly FormatOnSavePackage _package;
 
         public VsRunningDocTableEventsHandler(FormatOnSavePackage package)
         {

@@ -19,5 +19,5 @@ namespace Tinyfish.FormatOnSave
         public static readonly Guid GuidFormatOnSaveCmdSetSolution = new Guid(GuidFormatOnSaveCmdSetStringSolution);
         public static readonly Guid GuidFormatOnSaveCmdSetSolutionFolder = new Guid(GuidFormatOnSaveCmdSetStringSolutionFolder);
         public static readonly Guid GuidFormatOnSaveCmdSetMultipleItems = new Guid(GuidFormatOnSaveCmdSetStringMultipleItems);
-    };
+    }
 }
