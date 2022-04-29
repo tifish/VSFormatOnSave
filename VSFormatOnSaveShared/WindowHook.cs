@@ -85,46 +85,46 @@ namespace Tinyfish.FormatOnSave
         }
     }
 
-    class WindowProcHook : WindowHook
-    {
-        public WindowProcHook()
-        {
-            _hookType = HookType.WH_CALLWNDPROC;
-            _hookProc = HookProcedure;
-        }
+    //class WindowProcHook : WindowHook
+    //{
+    //    public WindowProcHook()
+    //    {
+    //        _hookType = HookType.WH_CALLWNDPROC;
+    //        _hookProc = HookProcedure;
+    //    }
 
-        public delegate void MessageEvent(IntPtr hwnd, int message, IntPtr lParam, IntPtr wParam);
+    //    public delegate void MessageEvent(IntPtr hwnd, int message, IntPtr lParam, IntPtr wParam);
 
-        public event MessageEvent OnMessage;
+    //    public event MessageEvent OnMessage;
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct CWPSTRUCT
-        {
-            public readonly IntPtr lParam;
-            public readonly IntPtr wParam;
-            public readonly int message;
-            public readonly IntPtr hwnd;
-        }
+    //    [StructLayout(LayoutKind.Sequential)]
+    //    private struct CWPSTRUCT
+    //    {
+    //        public readonly IntPtr lParam;
+    //        public readonly IntPtr wParam;
+    //        public readonly int message;
+    //        public readonly IntPtr hwnd;
+    //    }
 
-        public bool CallNextProc { get; set; } = true;
+    //    public bool CallNextProc { get; set; } = true;
 
-        private int HookProcedure(int code, IntPtr wParam, IntPtr lParam)
-        {
-            try
-            {
-                if (OnMessage != null && lParam != IntPtr.Zero)
-                    unsafe
-                    {
-                        var cwp = (CWPSTRUCT*)lParam;
-                        OnMessage.Invoke(cwp->hwnd, cwp->message, cwp->lParam, cwp->wParam);
-                    }
+    //    private int HookProcedure(int code, IntPtr wParam, IntPtr lParam)
+    //    {
+    //        try
+    //        {
+    //            if (OnMessage != null && lParam != IntPtr.Zero)
+    //                unsafe
+    //                {
+    //                    var cwp = (CWPSTRUCT*)lParam;
+    //                    OnMessage.Invoke(cwp->hwnd, cwp->message, cwp->lParam, cwp->wParam);
+    //                }
 
-                return CallNextHookEx(CallNextProc ? _hookHandle : IntPtr.Zero, code, wParam, lParam);
-            }
-            catch (Exception)
-            {
-                return 0;
-            }
-        }
-    }
+    //            return CallNextHookEx(CallNextProc ? _hookHandle : IntPtr.Zero, code, wParam, lParam);
+    //        }
+    //        catch (Exception)
+    //        {
+    //            return 0;
+    //        }
+    //    }
+    //}
 }
