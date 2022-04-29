@@ -15,6 +15,10 @@ And more:
 - Batch formatting in solution explorer.
 - Settings in Tools -> Options -> Format on Save.
 
+New in v3.0
+
+- AutoSaveOnDeactivated, save files when Visual Studio deactivated.
+
 I found it convenient to unify source code format throughout the develop team. If you have any suggestion, feel free to tell me.
 
 Two versions:
@@ -24,10 +28,11 @@ Two versions:
 
 ## Updates
 
-### v2.3
+### v3.0
 
+- New feature AutoSaveOnDeactivated, save files when Visual Studio deactivated.
 - Fix naming inconsistency. #15
-- In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving. I try to capture the modification and save again.
+- In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving. I managed to capture the modification and save again.
 
 ### v2.2
 

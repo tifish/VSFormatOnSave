@@ -15,6 +15,12 @@ namespace Tinyfish.FormatOnSave
         public bool Enabled { get; set; } = true;
 
 
+        [Category("Auto Save")]
+        [DisplayName("Enable AutoSaveOnDeativated")]
+        [Description("Enable AutoSaveOnDeativated, save files when Visual Studio deactivated.")]
+        public bool EnableAutoSaveOnDeativated { get; set; } = true;
+
+
         public enum LineBreakStyle
         {
             Unix = 0,

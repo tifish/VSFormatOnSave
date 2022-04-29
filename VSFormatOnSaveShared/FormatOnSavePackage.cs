@@ -21,6 +21,7 @@ using DefGuidList = Microsoft.VisualStudio.Editor.DefGuidList;
 using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 #if true
 using Task = System.Threading.Tasks.Task;
+using Application = System.Windows.Application;
 #endif
 
 namespace Tinyfish.FormatOnSave
@@ -80,7 +81,53 @@ namespace Tinyfish.FormatOnSave
             _solutionExplorerContextMenu = new SolutionExplorerContextMenu(this);
 
             await EnableDisableFormatOnSaveCommand.InitializeAsync(this);
+
+            UpdateAutoSaveEvents();
         }
+
+        private void OnSettingsUpdated(object sender, EventArgs e)
+        {
+            UpdateCaptureEvents();
+            UpdateAutoSaveEvents();
+        }
+
+        #region Auto save events
+
+        private void UpdateAutoSaveEvents()
+        {
+            if (OptionsPage.EnableAutoSaveOnDeativated)
+            {
+                if (!_autoSaveEventsRegistered)
+                {
+                    Application.Current.Deactivated += OnAutoSave;
+                    _autoSaveEventsRegistered = true;
+                }
+            }
+            else
+            {
+                if (_autoSaveEventsRegistered)
+                {
+                    Application.Current.Deactivated -= OnAutoSave;
+                    _autoSaveEventsRegistered = false;
+                }
+            }
+        }
+
+        private bool _autoSaveEventsRegistered = false;
+
+        private void OnAutoSave(object sender, EventArgs e)
+        {
+            try
+            {
+                Dte.ExecuteCommand("File.SaveAll");
+            }
+            catch
+            {
+                // Ignored
+            }
+        }
+
+        #endregion
 
         public void Format(uint docCookie)
         {
@@ -211,11 +258,6 @@ namespace Tinyfish.FormatOnSave
         }
 
         #region Capture delayed Edit.FormatDocument command
-
-        private void OnSettingsUpdated(object sender, EventArgs e)
-        {
-            UpdateCaptureEvents();
-        }
 
         private TextEditorEvents _textEditorEvents;
         private WindowKeyboardHook _keyboardHook;
