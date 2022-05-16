@@ -1,7 +1,6 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Shell;
+using System;
 using System.ComponentModel.Design;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
 namespace Tinyfish.FormatOnSave
@@ -82,7 +81,7 @@ namespace Tinyfish.FormatOnSave
             // User click menu command before extension loading.
             if (command.Text == "")
                 return;
-            
+
             package.OptionsPage.Enabled = !package.OptionsPage.Enabled;
             package.OptionsPage.SaveSettingsToStorage();
             package.OptionsPage.UpdateSettings();

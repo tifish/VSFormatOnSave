@@ -84,10 +84,10 @@ namespace Tinyfish.FormatOnSave
 
         public static class Chars
         {
-            public static char NUL = (char) 0; // Null char
-            public static char BS = (char) 8; // Back Space
-            public static char CR = (char) 13; // Carriage Return
-            public static char SUB = (char) 26; // Substitute
+            public static char NUL = (char)0; // Null char
+            public static char BS = (char)8; // Back Space
+            public static char CR = (char)13; // Carriage Return
+            public static char SUB = (char)26; // Substitute
         }
     }
 }
