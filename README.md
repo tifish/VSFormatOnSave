@@ -32,7 +32,7 @@ Two versions:
 
 - New feature AutoSaveOnDeactivated, save files when Visual Studio deactivated.
 - Fix naming inconsistency. #15
-- In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving. I managed to capture the modification and save again.
+- In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving. I managed to capture the modification and save again. #14, #16
 
 ### v2.2
 

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="VSFormatOnSave2022.9484441C-1BE1-4481-997F-0FEDF16868C8" Version="2.2" Language="en-US" Publisher="Winston Feng" />
+        <Identity Id="VSFormatOnSave2022.9484441C-1BE1-4481-997F-0FEDF16868C8" Version="3.0" Language="en-US" Publisher="Winston Feng" />
         <DisplayName>Format on Save for VS2022</DisplayName>
         <Description xml:space="preserve">Automatically format document on save. Current release includes RemoveAndSort, FormatDocument, UnifyLineBreak, UnifyEndOfFile, TabToSpace, ForceUtf8WithBom with file extension filters.</Description>
         <MoreInfo>https://visualstudiogallery.msdn.microsoft.com/9484441C-1BE1-4481-997F-0FEDF16868C8</MoreInfo>
         <License>LICENSE</License>
-        <Tags>Format, LineBreak, LineEnd, Tab, Space, Encoding, UTF8, BOM</Tags>
+        <Tags>Format, LineBreak, LineEnd, Tab, Space, Encoding, UTF8, BOM, AutoSave</Tags>
     </Metadata>
     <Installation InstalledByMsi="false">
         <InstallationTarget Version="[17.0,)" Id="Microsoft.VisualStudio.Community">
