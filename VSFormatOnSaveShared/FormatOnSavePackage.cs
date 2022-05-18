@@ -38,7 +38,6 @@ namespace Tinyfish.FormatOnSave
         public OptionsPage OptionsPage { get; private set; }
         private RunningDocumentTable _runningDocumentTable;
         private ServiceProvider _serviceProvider;
-        private ITextUndoHistoryRegistry _undoHistoryRegistry;
         public OleMenuCommandService MenuCommandService { get; private set; }
         private SolutionExplorerContextMenu _solutionExplorerContextMenu;
         public int MajorVersion { get; private set; }
@@ -58,9 +57,6 @@ namespace Tinyfish.FormatOnSave
                 MajorVersion = int.Parse(versionItems[0]);
                 MinorVersion = int.Parse(versionItems[1]);
             }
-
-            var componentModel = (IComponentModel)GetGlobalService(typeof(SComponentModel));
-            _undoHistoryRegistry = componentModel.DefaultExportProvider.GetExportedValue<ITextUndoHistoryRegistry>();
 
             var docTableEventHandler = new VsRunningDocTableEventsHandler(this);
 
@@ -191,46 +187,44 @@ namespace Tinyfish.FormatOnSave
                 if (wpfTextView == null)
                     return false;
 
-                _undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
+                // In VS2022 .cshtml file, undo cause some error which totally disabled undo function.
+                // It seems undo is not necessary in new VS versions.
+                //_undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
+                //using (var undo = history?.CreateTransaction("Format on save"))
 
-                using (var undo = history?.CreateTransaction("Format on save"))
-                {
-                    vsTextView.GetCaretPos(out var oldCaretLine, out var oldCaretColumn);
-                    vsTextView.SetCaretPos(oldCaretLine, 0);
+                vsTextView.GetCaretPos(out var oldCaretLine, out var oldCaretColumn);
+                vsTextView.SetCaretPos(oldCaretLine, 0);
 
-                    // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-                    if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name)
-                        && !insertTabs)
-                        TabToSpace(wpfTextView, document.TabSize);
+                // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
+                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name)
+                    && !insertTabs)
+                    TabToSpace(wpfTextView, document.TabSize);
 
-                    if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name)
-                        && ext == ".cs")
-                        if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
-                            RemoveAndSort();
+                if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name)
+                    && ext == ".cs")
+                    if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
+                        RemoveAndSort();
 
-                    if (OptionsPage.EnableFormatDocument && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
-                        FormatDocument(ext);
+                if (OptionsPage.EnableFormatDocument && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
+                    FormatDocument(ext);
 
-                    // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
-                    // At 2021.10 the bug has gone. But VS seems to stick to space now, new bug?
-                    //if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs
-                    //    && Dte.Version == "15.0" && document.Language == "C/C++")
-                    //    TabToSpace(wpfTextView, document.TabSize);
+                // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
+                // At 2021.10 the bug has gone. But VS seems to stick to space now, new bug?
+                //if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs
+                //    && Dte.Version == "15.0" && document.Language == "C/C++")
+                //    TabToSpace(wpfTextView, document.TabSize);
 
-                    if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name))
-                        UnifyLineBreak(wpfTextView, OptionsPage.ForceCRLFFilter.IsAllowed(document.Name));
+                if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name))
+                    UnifyLineBreak(wpfTextView, OptionsPage.ForceCRLFFilter.IsAllowed(document.Name));
 
-                    if (OptionsPage.EnableUnifyEndOfFile && OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(document.Name))
-                        UnifyEndOfFile(wpfTextView);
+                if (OptionsPage.EnableUnifyEndOfFile && OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(document.Name))
+                    UnifyEndOfFile(wpfTextView);
 
-                    if (OptionsPage.EnableForceUtf8WithBom && OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
-                        ForceUtf8WithBom(wpfTextView);
+                if (OptionsPage.EnableForceUtf8WithBom && OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
+                    ForceUtf8WithBom(wpfTextView);
 
-                    vsTextView.GetCaretPos(out var newCaretLine, out _);
-                    vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
-
-                    undo?.Complete();
-                }
+                vsTextView.GetCaretPos(out var newCaretLine, out _);
+                vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
             }
             finally
             {
