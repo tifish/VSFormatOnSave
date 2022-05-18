@@ -122,21 +122,7 @@ namespace Tinyfish.FormatOnSave
 
         public AllowDenyDocumentFilter AllowDenyUnifyEndOfFileFilter;
 
-
-        [Obsolete]
-        [Category("Others (deprecated)")]
-        [DisplayName("Allowed extensions for all except FormatDocument")]
-        [Description("Allowed extensions for all except FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowExtentions { get; set; } = "";
-
-        [Obsolete]
-        [Category("Others (deprecated)")]
-        [DisplayName("Denied extensions for all except FormatDocument")]
-        [Description(
-            "Denied extensions for all except FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyExtentions { get; set; } = "";
-
-
+         
         [Category("Tab to space")]
         [DisplayName("Enable TabToSpace")]
         [Description("Enable TabToSpace. Depends on tabs options for the type of file.")]
