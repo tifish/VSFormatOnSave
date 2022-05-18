@@ -98,8 +98,8 @@ namespace Tinyfish.FormatOnSave
         public AllowDenyDocumentFilter AllowDenyUnifyLineBreakFilter;
 
         [Category("Line break")]
-        [DisplayName("Force CRLF file extensions")]
-        [Description("Force CRLF file extensions. Some files like .aspx must be CRLF, or Visual Studio format will produce weird empty lines. Space separated list. For example: .cs .html .cshtml .vb")]
+        [DisplayName("Force Windows(CRLF) file extensions")]
+        [Description("Force Windows(CRLF) file extensions. Some files like .aspx must be Windows(CRLF), or Visual Studio format will produce weird empty lines. Space separated list. For example: .cs .html .cshtml .vb")]
         public string ForceCRLFExtensions { get; set; } = ".aspx";
 
         public AllowDenyDocumentFilter ForceCRLFFilter;
