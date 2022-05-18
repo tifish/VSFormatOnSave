@@ -28,6 +28,13 @@ Two versions:
 
 ## Updates
 
+### v3.1
+
+- Fix undo may fail in .cshtml files.
+- Fix invalid more information links.
+- Remove deprecated options.
+- Change default line break style to Windows.
+
 ### v3.0
 
 - New feature AutoSaveOnDeactivated, save files when Visual Studio deactivated.
