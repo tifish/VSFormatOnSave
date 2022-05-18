@@ -40,12 +40,12 @@ namespace Tinyfish.FormatOnSave
         [Category("Remove and sort for C#")]
         [DisplayName("Allowed extensions for RemoveAndSort only")]
         [Description("Allowed extensions for RemoveAndSort only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowRemoveAndSortExtensions { get; set; } = string.Empty;
+        public string AllowRemoveAndSortExtensions { get; set; } = "";
 
         [Category("Remove and sort for C#")]
         [DisplayName("Denied extensions for RemoveAndSort only")]
         [Description("Denied extensions for RemoveAndSort only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyRemoveAndSortExtensions { get; set; } = string.Empty;
+        public string DenyRemoveAndSortExtensions { get; set; } = "";
 
         public AllowDenyDocumentFilter AllowDenyRemoveAndSortFilter;
 
@@ -58,12 +58,12 @@ namespace Tinyfish.FormatOnSave
         [Category("Format document")]
         [DisplayName("Allowed extensions for FormatDocument only")]
         [Description("Allowed extensions for FormatDocument only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowFormatDocumentExtentions { get; set; } = string.Empty;
+        public string AllowFormatDocumentExtentions { get; set; } = "";
 
         [Category("Format document")]
         [DisplayName("Denied extensions for FormatDocument only")]
         [Description("Denied extensions for FormatDocument only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyFormatDocumentExtentions { get; set; } = string.Empty;
+        public string DenyFormatDocumentExtentions { get; set; } = "";
 
         public AllowDenyDocumentFilter AllowDenyFormatDocumentFilter;
 
@@ -88,12 +88,12 @@ namespace Tinyfish.FormatOnSave
         [Category("Line break")]
         [DisplayName("Allowed extensions for UnifyLineBreak only")]
         [Description("Allowed extensions for UnifyLineBreak only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowUnifyLineBreakExtensions { get; set; } = string.Empty;
+        public string AllowUnifyLineBreakExtensions { get; set; } = "";
 
         [Category("Line break")]
         [DisplayName("Denied extensions for UnifyLineBreak only")]
         [Description("Denied extensions for UnifyLineBreak only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyUnifyLineBreakExtensions { get; set; } = string.Empty;
+        public string DenyUnifyLineBreakExtensions { get; set; } = "";
 
         public AllowDenyDocumentFilter AllowDenyUnifyLineBreakFilter;
 
@@ -113,12 +113,12 @@ namespace Tinyfish.FormatOnSave
         [Category("End of file")]
         [DisplayName("Allowed extensions for UnifyEndOfFile only")]
         [Description("Allowed extensions for UnifyEndOfFile only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowUnifyEndOfFileExtensions { get; set; } = string.Empty;
+        public string AllowUnifyEndOfFileExtensions { get; set; } = "";
 
         [Category("End of file")]
         [DisplayName("Denied extensions for UnifyEndOfFile only")]
         [Description("Denied extensions for UnifyEndOfFile only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyUnifyEndOfFileExtensions { get; set; } = string.Empty;
+        public string DenyUnifyEndOfFileExtensions { get; set; } = "";
 
         public AllowDenyDocumentFilter AllowDenyUnifyEndOfFileFilter;
 
@@ -127,14 +127,14 @@ namespace Tinyfish.FormatOnSave
         [Category("Others (deprecated)")]
         [DisplayName("Allowed extensions for all except FormatDocument")]
         [Description("Allowed extensions for all except FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowExtentions { get; set; } = string.Empty;
+        public string AllowExtentions { get; set; } = "";
 
         [Obsolete]
         [Category("Others (deprecated)")]
         [DisplayName("Denied extensions for all except FormatDocument")]
         [Description(
             "Denied extensions for all except FormatDocument. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyExtentions { get; set; } = string.Empty;
+        public string DenyExtentions { get; set; } = "";
 
 
         [Category("Tab to space")]
@@ -145,12 +145,12 @@ namespace Tinyfish.FormatOnSave
         [Category("Tab to space")]
         [DisplayName("Allowed extensions for TabToSpace only")]
         [Description("Allowed extensions for TabToSpace only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowTabToSpaceExtensions { get; set; } = string.Empty;
+        public string AllowTabToSpaceExtensions { get; set; } = "";
 
         [Category("Tab to space")]
         [DisplayName("Denied extensions for TabToSpace only")]
         [Description("Denied extensions for TabToSpace only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyTabToSpaceExtensions { get; set; } = string.Empty;
+        public string DenyTabToSpaceExtensions { get; set; } = "";
 
         public AllowDenyDocumentFilter AllowDenyTabToSpaceFilter;
 
@@ -163,12 +163,12 @@ namespace Tinyfish.FormatOnSave
         [Category("UTF8")]
         [DisplayName("Allowed extensions for ForceUtf8WithBom only")]
         [Description("Allowed extensions for ForceUtf8WithBom only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string AllowForceUtf8WithBomExtentions { get; set; } = string.Empty;
+        public string AllowForceUtf8WithBomExtentions { get; set; } = "";
 
         [Category("UTF8")]
         [DisplayName("Denied extensions for ForceUtf8WithBom only")]
         [Description("Denied extensions for ForceUtf8WithBom only. Space separated list. For example: .cs .html .cshtml .vb")]
-        public string DenyForceUtf8WithBomExtentions { get; set; } = string.Empty;
+        public string DenyForceUtf8WithBomExtentions { get; set; } = "";
 
         public AllowDenyDocumentFilter AllowDenyForceUtf8WithBomFilter;
 

@@ -250,7 +250,7 @@ namespace Tinyfish.FormatOnSave
         {
             try
             {
-                Dte.ExecuteCommand("Edit.RemoveAndSort", string.Empty);
+                Dte.ExecuteCommand("Edit.RemoveAndSort", "");
             }
             catch (COMException)
             {
@@ -369,7 +369,7 @@ namespace Tinyfish.FormatOnSave
         {
             try
             {
-                Dte.ExecuteCommand("Edit.FormatDocument", string.Empty);
+                Dte.ExecuteCommand("Edit.FormatDocument", "");
 
                 // In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving.
                 // I try to capture the modification and save again.
