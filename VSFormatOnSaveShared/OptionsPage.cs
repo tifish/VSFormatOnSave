@@ -83,7 +83,7 @@ namespace Tinyfish.FormatOnSave
         [Category("Line break")]
         [DisplayName("Line break style")]
         [Description("Line break style.")]
-        public LineBreakStyle LineBreak { get; set; } = LineBreakStyle.Unix;
+        public LineBreakStyle LineBreak { get; set; } = LineBreakStyle.Windows;
 
         [Category("Line break")]
         [DisplayName("Allowed extensions for UnifyLineBreak only")]
