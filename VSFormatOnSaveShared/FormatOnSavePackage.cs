@@ -192,6 +192,7 @@ namespace Tinyfish.FormatOnSave
                 //_undoHistoryRegistry.TryGetHistory(wpfTextView.TextBuffer, out var history);
                 //using (var undo = history?.CreateTransaction("Format on save"))
 
+                // Keep and restore column later.
                 vsTextView.GetCaretPos(out var oldCaretLine, out var oldCaretColumn);
                 vsTextView.SetCaretPos(oldCaretLine, 0);
 
@@ -223,6 +224,7 @@ namespace Tinyfish.FormatOnSave
                 if (OptionsPage.EnableForceUtf8WithBom && OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
                     ForceUtf8WithBom(wpfTextView);
 
+                // Caret stay in new line but keep old column.
                 vsTextView.GetCaretPos(out var newCaretLine, out _);
                 vsTextView.SetCaretPos(newCaretLine, oldCaretColumn);
             }
