@@ -122,7 +122,7 @@ namespace Tinyfish.FormatOnSave
 
         public AllowDenyDocumentFilter AllowDenyUnifyEndOfFileFilter;
 
-         
+
         [Category("Tab to space")]
         [DisplayName("Enable TabToSpace")]
         [Description("Enable TabToSpace. Depends on tabs options for the type of file.")]

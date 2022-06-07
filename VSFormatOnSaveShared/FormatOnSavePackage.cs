@@ -37,8 +37,7 @@ namespace Tinyfish.FormatOnSave
         public DTE2 Dte { get; private set; }
         public OptionsPage OptionsPage { get; private set; }
         private RunningDocumentTable _runningDocumentTable;
-        private ServiceProvider _serviceProvider;
-        public OleMenuCommandService MenuCommandService { get; private set; }
+        private ServiceProvider _serviceProvider; public OleMenuCommandService MenuCommandService { get; private set; }
         private SolutionExplorerContextMenu _solutionExplorerContextMenu;
         public int MajorVersion { get; private set; }
         public int MinorVersion { get; private set; }
