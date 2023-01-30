@@ -173,12 +173,13 @@ namespace Tinyfish.FormatOnSave
 
             try
             {
-                var insertTabs = true;
-                if (document.Language != "Plain Text") // .feature file is "Plain Text", cannot be ignore
-                {
-                    var languageOptions = Dte.Properties["TextEditor", document.Language];
-                    insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
-                }
+                // languageOptions.Item("InsertTabs").Value is not affected by the value in .editorconfig, so ignore it.
+                //var insertTabs = true;
+                //if (document.Language != "Plain Text") // .feature file is "Plain Text", cannot be ignore
+                //{
+                //    var languageOptions = Dte.Properties["TextEditor", document.Language];
+                //    insertTabs = (bool)languageOptions.Item("InsertTabs").Value;
+                //}
 
                 var vsTextView = GetIVsTextView(document.FullName);
                 if (vsTextView == null)
@@ -197,8 +198,7 @@ namespace Tinyfish.FormatOnSave
                 vsTextView.SetCaretPos(oldCaretLine, 0);
 
                 // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name)
-                    && !insertTabs)
+                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name))
                     TabToSpace(wpfTextView, document.TabSize);
 
                 if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name)
@@ -211,9 +211,11 @@ namespace Tinyfish.FormatOnSave
 
                 // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
                 // At 2021.10 the bug has gone. But VS seems to stick to space now, new bug?
-                //if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name) && !insertTabs
-                //    && Dte.Version == "15.0" && document.Language == "C/C++")
-                //    TabToSpace(wpfTextView, document.TabSize);
+                // At 2023.01 when formatting in project/solution, with a .editorconfig set to space,
+                // FormatDocument use tab instead. It seems FormatDocument ignore .editorconfig, and only apply VS's settings.
+                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name)
+                    && document.Language == "C/C++")
+                    TabToSpace(wpfTextView, document.TabSize);
 
                 if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name))
                     UnifyLineBreak(wpfTextView, OptionsPage.ForceCRLFFilter.IsAllowed(document.Name));
