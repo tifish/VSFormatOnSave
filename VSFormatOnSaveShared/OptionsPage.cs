@@ -72,7 +72,7 @@ namespace Tinyfish.FormatOnSave
         [Description("Extensions cause delayed FormatDocument, which modify file after saving. Space separated list. For example: .razor .cshtml")]
         public string DelayedFormatDocumentExtentions { get; set; } = ".razor .cshtml";
 
-        public AllowDenyDocumentFilter DelayedFormatDocumentFilter;
+        public AllowDenyDocumentFilter ImmediateFormatDocumentFilter;
 
 
         [Category("Line break")]
@@ -168,7 +168,7 @@ namespace Tinyfish.FormatOnSave
             AllowDenyFormatDocumentFilter = new AllowDenyDocumentFilter(
                 AllowFormatDocumentExtentions.Split(' '), DenyFormatDocumentExtentions.Split(' '));
 
-            DelayedFormatDocumentFilter = new AllowDenyDocumentFilter(DelayedFormatDocumentExtentions.Split(' '), null);
+            ImmediateFormatDocumentFilter = new AllowDenyDocumentFilter(null, DelayedFormatDocumentExtentions.Split(' '));
 
             AllowDenyUnifyLineBreakFilter = new AllowDenyDocumentFilter(
                 AllowUnifyLineBreakExtensions.Split(' '), DenyUnifyLineBreakExtensions.Split(' '));

@@ -371,7 +371,7 @@ namespace Tinyfish.FormatOnSave
                 // In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving.
                 // I try to capture the modification and save again.
                 if (MajorVersion >= 17
-                    && OptionsPage.DelayedFormatDocumentFilter.IsAllowed(ext))
+                    && !OptionsPage.ImmediateFormatDocumentFilter.IsAllowed(ext))
                 {
                     UpdateCaptureEvents();
 
