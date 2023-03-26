@@ -104,9 +104,9 @@
       <Button guid="guidFormatOnSavePackageCmdSet" id="cmdidEnableDisableFormatOnSaveCommand" priority="0x0100" type="Button">
         <Parent guid="guidFormatOnSavePackageCmdSet" id="ToolsMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
-		  <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <ButtonText>Format on Save is not loaded</ButtonText>
+          <ButtonText>Format on Save is not loaded, click to load</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -147,12 +147,12 @@
       <IDSymbol name="MenuGroupSolution" value="0x1020" />
       <IDSymbol name="CmdIdFormatOnSaveMultipleItems" value="0x0105" />
     </GuidSymbol>
-  
+
     <GuidSymbol value="{d787d099-5ebf-4f09-9ef3-10d7cda25bcd}" name="guidFormatOnSavePackageCmdSet">
       <IDSymbol value="4128" name="ToolsMenuGroup" />
       <IDSymbol value="256" name="cmdidEnableDisableFormatOnSaveCommand" />
     </GuidSymbol>
-  
+
     <GuidSymbol value="{eda39203-1593-49e5-8b48-6af8bb40d371}" name="guidImages">
       <IDSymbol name="bmpPic1" value="1" />
       <IDSymbol name="bmpPic2" value="2" />

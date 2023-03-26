@@ -94,7 +94,7 @@ namespace Tinyfish.FormatOnSave
                 return;
 
             command.Checked = package.OptionsPage.Enabled;
-            command.Text = package.OptionsPage.Enabled ? "Disable Format on Save" : "Enable Format on Save";
+            command.Text = package.OptionsPage.Enabled ? "Format on Save is on, click to turn off" : "Format on Save is off, click to turn on";
         }
     }
 }
