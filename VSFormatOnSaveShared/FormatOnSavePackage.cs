@@ -301,36 +301,39 @@ namespace Tinyfish.FormatOnSave
 
         private void OnLineChanged(TextPoint startPoint, TextPoint endPoint, int hint)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // Only process when waiting for delayed Edit.FormatDocument command
             if (!_isWaitingForDelayedFormatDocumentCommand)
                 return;
+
+            // Ignore modifications of formatting
             if (_isFormatting)
                 return;
 
-            // No user typing, but document changed, should be changed by delayed Edit.FormatDocument command.
+            // Only process the triggered document
+            if (Dte.ActiveDocument != _delayedFormattingDocument)
+                return;
+
+            // No user typing, but document changed, that should be caused by delayed Edit.FormatDocument command.
 
             // Edit.FormatDocument may trigger multiple modification. Capture the last one.
-            ThreadHelper.ThrowIfNotOnUIThread();
             if (startPoint.AbsoluteCharOffset != endPoint.AbsoluteCharOffset)
                 return;
 
             _isWaitingForDelayedFormatDocumentCommand = false;
-
-            // Only process the triggered document
-            if (Dte.ActiveDocument == _delayedFormattingDocument)
-            {
-                // Save without formatting
-                _isSavingWithoutFormatting = true;
-                try
-                {
-                    Dte.ExecuteCommand("File.SaveSelectedItems");
-                }
-                finally
-                {
-                    _isSavingWithoutFormatting = false;
-                }
-            }
-
             _delayedFormattingDocument = null;
+
+            // Save without formatting
+            _isSavingWithoutFormatting = true;
+            try
+            {
+                Dte.ExecuteCommand("File.SaveSelectedItems");
+            }
+            finally
+            {
+                _isSavingWithoutFormatting = false;
+            }
         }
 
         private readonly Keys[] _bypassKeys =
@@ -345,7 +348,7 @@ namespace Tinyfish.FormatOnSave
         private void OnKeyboardMessage(Keys key, bool isPressing)
         {
             // Any user modification will stop waiting for delayed Edit.FormatDocument command.
-            // It is not 100% accurrate.
+            // It is not 100% accurate.
             if (!_isWaitingForDelayedFormatDocumentCommand)
                 return;
             if (!isPressing)
