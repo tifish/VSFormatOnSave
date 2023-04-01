@@ -1,8 +1,8 @@
 Automatically format document on save. Current release includes:
 
+- FormatDocument: Same as Edit > Advance > Format Document
 - RemoveAndSort: Same as Edit > IntelliSense > Remove and Sort Usings
 - SmartRemoveAndSort: Apply remove and sort to .cs without #if.
-- FormatDocument: Same as Edit > Advance > Format Document
 - UnifyLineBreak: Enforce line break to CRLF or LF.
 - UnifyEndOfFile: Enforce only one line break at the end of file.
 - TabToSpace: Convert tab to space.
@@ -11,22 +11,25 @@ Automatically format document on save. Current release includes:
 
 And more:
 
+- AutoSaveOnDeactivated: save files when Visual Studio deactivated.
 - File extension filters.
 - Batch formatting in solution explorer.
 - Settings in Tools -> Options -> Format on Save.
 
-New in v3.0
-
-- AutoSaveOnDeactivated, save files when Visual Studio deactivated.
-
 I found it convenient to unify source code format throughout the develop team. If you have any suggestion, feel free to tell me.
 
-Two versions:
+For different Visual Studio versions:
 
 - [For VS2015-2019](https://marketplace.visualstudio.com/items?itemName=WinstonFeng.FormatonSave)
 - [For VS2022](https://marketplace.visualstudio.com/items?itemName=WinstonFeng.VSFormatOnSave2022)
 
 ## Updates
+
+### 3.2
+
+- When formatting in project/solution, with a `.editorconfig` set to space, FormatDocument use tab instead. It seems FormatDocument ignore .editorconfig, and only apply VS's settings. So I recall the old trick: run TabToSpace after FormatDocument.
+- Optimize hints for menu item to reduce misunderstandings.
+- Fix when "Extension cause delayed FormatDocument" filter is empty, all files are processed.
 
 ### v3.1
 
@@ -49,11 +52,11 @@ Two versions:
 - Remove VS2017 tab to space bug fix, since the bug has gone in the latest version.
 - Add support for SpecFlow .feature files. #12
 - Show "Enable/Disable format on save" on menu item to avoid misleading.
-- Upload VS2022 version to the marketplace. Removed the github version.
+- Upload VS2022 version to the marketplace. Removed the GitHub version.
 
 ### v2.1
 
-- Supports Visual Studio 2022 Preview. Please download Visual Studio 2022 version from github.
+- Supports Visual Studio 2022 Preview. Please download Visual Studio 2022 version from GitHub.
 - Add Enable/Disable button to Tools menu.
 - RemoveAndSort, UnifyLineBreak, TabToSpace, ForceUtf8WithBom are disabled by default.
 - Skip binary files.
