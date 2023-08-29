@@ -90,7 +90,7 @@ namespace Tinyfish.FormatOnSave
 
         private void UpdateAutoSaveEvents()
         {
-            if (OptionsPage.EnableAutoSaveOnDeativated)
+            if (OptionsPage.EnableAutoSaveOnDeactivated)
             {
                 if (!_autoSaveEventsRegistered)
                 {
