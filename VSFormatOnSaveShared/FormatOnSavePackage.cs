@@ -197,32 +197,32 @@ namespace Tinyfish.FormatOnSave
                 vsTextView.SetCaretPos(oldCaretLine, 0);
 
                 // Do TabToSpace before FormatDocument, since VS format may break the tab formatting.
-                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name))
+                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name, document.Path))
                     TabToSpace(wpfTextView, document.TabSize);
 
-                if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name)
+                if (OptionsPage.EnableRemoveAndSort && OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(document.Name, document.Path)
                     && ext == ".cs")
                     if (!OptionsPage.EnableSmartRemoveAndSort || !HasIfCompilerDirective(wpfTextView))
                         RemoveAndSort();
 
-                if (OptionsPage.EnableFormatDocument && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name))
+                if (OptionsPage.EnableFormatDocument && OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(document.Name, document.Path))
                     FormatDocument(ext);
 
                 // Do TabToSpace again after FormatDocument, since VS2017 may stick to tab. Should remove this after VS2017 fix the bug.
                 // At 2021.10 the bug has gone. But VS seems to stick to space now, new bug?
                 // At 2023.01 when formatting in project/solution, with a .editorconfig set to space,
                 // FormatDocument use tab instead. It seems FormatDocument ignore .editorconfig, and only apply VS's settings.
-                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name)
+                if (OptionsPage.EnableTabToSpace && OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(document.Name, document.Path)
                     && document.Language == "C/C++")
                     TabToSpace(wpfTextView, document.TabSize);
 
-                if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name))
-                    UnifyLineBreak(wpfTextView, OptionsPage.ForceCRLFFilter.IsAllowed(document.Name));
+                if (OptionsPage.EnableUnifyLineBreak && OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(document.Name, document.Path))
+                    UnifyLineBreak(wpfTextView, OptionsPage.ForceCRLFFilter.IsAllowed(document.Name, document.Path));
 
-                if (OptionsPage.EnableUnifyEndOfFile && OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(document.Name))
+                if (OptionsPage.EnableUnifyEndOfFile && OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(document.Name, document.Path))
                     UnifyEndOfFile(wpfTextView);
 
-                if (OptionsPage.EnableForceUtf8WithBom && OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name))
+                if (OptionsPage.EnableForceUtf8WithBom && OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(document.Name, document.Path))
                     ForceUtf8WithBom(wpfTextView);
 
                 // Caret stay in new line but keep old column.
@@ -374,7 +374,7 @@ namespace Tinyfish.FormatOnSave
                 // In VS2022, .razor and .cshtml file will delayed Edit.FormatDocument command, which modify document after saving.
                 // I try to capture the modification and save again.
                 if (MajorVersion >= 17
-                    && !OptionsPage.ImmediateFormatDocumentFilter.IsAllowed(ext))
+                    && !OptionsPage.ImmediateFormatDocumentFilter.IsAllowed(ext, null))
                 {
                     UpdateCaptureEvents();
 

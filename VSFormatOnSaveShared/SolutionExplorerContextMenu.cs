@@ -145,12 +145,12 @@ namespace Tinyfish.FormatOnSave
         private void FormatProjectItem(ProjectItem item)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            if (!((_package.OptionsPage.EnableRemoveAndSort && _package.OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(item.Name))
-                  || (_package.OptionsPage.EnableFormatDocument && _package.OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(item.Name))
-                  || (_package.OptionsPage.EnableUnifyLineBreak && _package.OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(item.Name))
-                  || (_package.OptionsPage.EnableUnifyEndOfFile && _package.OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(item.Name))
-                  || (_package.OptionsPage.EnableTabToSpace && _package.OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(item.Name))
-                  || (_package.OptionsPage.EnableForceUtf8WithBom && _package.OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(item.Name)))
+            if (!((_package.OptionsPage.EnableRemoveAndSort && _package.OptionsPage.AllowDenyRemoveAndSortFilter.IsAllowed(item.Name, item.Document.Path))
+                  || (_package.OptionsPage.EnableFormatDocument && _package.OptionsPage.AllowDenyFormatDocumentFilter.IsAllowed(item.Name, item.Document.Path))
+                  || (_package.OptionsPage.EnableUnifyLineBreak && _package.OptionsPage.AllowDenyUnifyLineBreakFilter.IsAllowed(item.Name, item.Document.Path))
+                  || (_package.OptionsPage.EnableUnifyEndOfFile && _package.OptionsPage.AllowDenyUnifyEndOfFileFilter.IsAllowed(item.Name, item.Document.Path))
+                  || (_package.OptionsPage.EnableTabToSpace && _package.OptionsPage.AllowDenyTabToSpaceFilter.IsAllowed(item.Name, item.Document.Path))
+                  || (_package.OptionsPage.EnableForceUtf8WithBom && _package.OptionsPage.AllowDenyForceUtf8WithBomFilter.IsAllowed(item.Name, item.Document.Path)))
                )
                 return;
 

@@ -158,33 +158,47 @@ namespace Tinyfish.FormatOnSave
 
         public AllowDenyDocumentFilter AllowDenyForceUtf8WithBomFilter;
 
+        [Category("Format document")]
+        [DisplayName("Format Folder Blacklist")]
+        [Description("Files in these folders and their children are denied, unless explicitly Whitelisted. Comma separated")]
+        public string BlacklistFolders { get; set; } = "";
+
+        [Category("Format document")]
+        [DisplayName("Format Folder Whitelist")]
+        [Description("Files in these folders and their children are allowed, even if their parent folders are blacklisted. Comma separated")]
+        public string WhitelistFolders { get; set; } = "";
+
+        public AllowDenyPathFilter AllowDenyUserPaths;
+
         public event EventHandler OnSettingsUpdated;
 
         public void UpdateSettings()
         {
+            AllowDenyUserPaths = new AllowDenyPathFilter(WhitelistFolders.Split(','), BlacklistFolders.Split(','));
+
             AllowDenyRemoveAndSortFilter = new AllowDenyDocumentFilter(
-                AllowRemoveAndSortExtensions.Split(' '), DenyRemoveAndSortExtensions.Split(' '));
+                AllowRemoveAndSortExtensions.Split(' '), DenyRemoveAndSortExtensions.Split(' '), AllowDenyUserPaths);
 
             AllowDenyFormatDocumentFilter = new AllowDenyDocumentFilter(
-                AllowFormatDocumentExtentions.Split(' '), DenyFormatDocumentExtentions.Split(' '));
+                AllowFormatDocumentExtentions.Split(' '), DenyFormatDocumentExtentions.Split(' '), AllowDenyUserPaths);
 
-            ImmediateFormatDocumentFilter = new AllowDenyDocumentFilter(null, DelayedFormatDocumentExtentions.Split(' '));
+            ImmediateFormatDocumentFilter = new AllowDenyDocumentFilter(null, DelayedFormatDocumentExtentions.Split(' '), AllowDenyUserPaths);
 
             AllowDenyUnifyLineBreakFilter = new AllowDenyDocumentFilter(
-                AllowUnifyLineBreakExtensions.Split(' '), DenyUnifyLineBreakExtensions.Split(' '));
+                AllowUnifyLineBreakExtensions.Split(' '), DenyUnifyLineBreakExtensions.Split(' '), AllowDenyUserPaths);
 
             if (string.IsNullOrWhiteSpace(ForceCRLFExtensions))
                 ForceCRLFExtensions = ".aspx";
-            ForceCRLFFilter = new AllowDenyDocumentFilter(ForceCRLFExtensions.Split(' '), null);
+            ForceCRLFFilter = new AllowDenyDocumentFilter(ForceCRLFExtensions.Split(' '), null, AllowDenyUserPaths);
 
             AllowDenyUnifyEndOfFileFilter = new AllowDenyDocumentFilter(
-                AllowUnifyEndOfFileExtensions.Split(' '), DenyUnifyEndOfFileExtensions.Split(' '));
+                AllowUnifyEndOfFileExtensions.Split(' '), DenyUnifyEndOfFileExtensions.Split(' '), AllowDenyUserPaths);
 
             AllowDenyTabToSpaceFilter = new AllowDenyDocumentFilter(
-                AllowTabToSpaceExtensions.Split(' '), DenyTabToSpaceExtensions.Split(' '));
+                AllowTabToSpaceExtensions.Split(' '), DenyTabToSpaceExtensions.Split(' '), AllowDenyUserPaths);
 
             AllowDenyForceUtf8WithBomFilter = new AllowDenyDocumentFilter(
-                AllowForceUtf8WithBomExtentions.Split(' '), DenyForceUtf8WithBomExtentions.Split(' '));
+                AllowForceUtf8WithBomExtentions.Split(' '), DenyForceUtf8WithBomExtentions.Split(' '), AllowDenyUserPaths);
 
             OnSettingsUpdated?.Invoke(this, null);
         }
